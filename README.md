@@ -9,9 +9,9 @@ BeagleBone Black and Raspberry Pi boards using Scratch 2.0 as a graphical user i
 
 Installation instructions are provided in the Installation and Usage Guide located in the documentation directory.
 
-Known Limitations Imposed By The Scratch Team:
-Currently Xi only works with the Scratch 2.0 Online editor.
-Projects created using Xi cannot be shared on the Scratch cloud.
+### Known Limitations Imposed By The Scratch Team:
+1. Currently Xi only works with the Scratch 2.0 Online editor.
+2. Projects created using Xi cannot be shared on the Scratch cloud.
 
 
 
