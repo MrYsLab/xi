@@ -14,7 +14,7 @@ If you have not yet downloaded and installed the files, you need not apply any f
 in the latest version of xiduinoinstall.bat
 
 If you have already installed XiDuino for Windows and are getting an error message about Websocket not being found,
-download the batch file fixme.bat from the servers/windows directory in the distribution, and then run it in a
+download the batch file fixme.bat from the servers/xiduino/windows directory in the distribution, and then run it in a
 command window. It will remove the node modules from the directory where they were originally installed and then will
 reinstall the modules in your Documents/Xi directory
 
