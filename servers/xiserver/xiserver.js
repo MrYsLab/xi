@@ -3,20 +3,30 @@
  *
  * Xi Server
  *
- * * Version: v.001
+ * * Version: v.002
+ *
+ * * Updated 19 Sep 2014
  *
  * This file is common to all Xi Server types and is used to instantiate XiDuino, XiPi and XiBone servers
  *
  * Selecting the appropriate board type is done through a command line option
  *
  * BOARD_ID Options:
- * ard = arduino
+ * ard = arduino deafult
  * bbb = beaglebone black
  * rpi = raspberry pi
  *
+ * DEBUG_LEVEL = 0 (no debug)
+ *               3 (maximum debug)
+ *
+ *""COM_PORT" = force a  specific com port to be used for arduino
+ * Quoted string, eg: "/dev/ttyACM0" or "COM3"
+ *
  * command line invocation:
  *
- * node xiserver.js BOARD_ID_OPTION
+ * node xiserver.js BOARD_ID_OPTION [DEBUG_LEVEL] ["COM_PORT"]
+ *
+ *
  *
  * i.e. beaglebone black:
  *
@@ -59,9 +69,11 @@ var WebSocketServer = require('websocket').server;
 var http = require('http');
 var five = require('johnny-five');
 
+
 var board; // a johnny-five 'board'
 var debugLevel; // set by user in command line invocation
 var serverType; // set by user in command line invocation
+var comPort; // communications port for Arduino - allows user to select the com port
 
 // save the server type from the command line
 
@@ -75,6 +87,11 @@ switch (process.argv.length) {
     case 4:
         serverType = process.argv[2];
         debugLevel = process.argv[3];
+        break;
+    case 5:
+        serverType = process.argv[2];
+        debugLevel = process.argv[3];
+        comPort = process.argv[4];
         break;
     // no options provided
     case 2:
@@ -110,7 +127,14 @@ switch (serverType) {
         // TODO: provide an option to specify the url
         var open = require('open'); // this is the package that opens the browser
         open('http://scratch.mit.edu/');
-        board = new five.Board();
+        // user wants to select the com port manually
+        if (comPort !== undefined){
+            board = new five.Board({port: comPort});
+        }
+        // allow board to automatically find the com port
+        else {
+            board = new five.Board();
+        }
 }
 
 // when the board construction completes a 'ready' message is emitted
