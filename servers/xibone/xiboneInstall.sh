@@ -38,6 +38,9 @@ echo "installing winston"
 
 npm install --prefix ~/xibone winston
 
+echo "installing open"
+npm install --prefix ~/xibone open
+
 echo "!!!! Install Complete !!!"
 echo
 echo
