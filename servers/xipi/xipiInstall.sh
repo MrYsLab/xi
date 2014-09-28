@@ -31,6 +31,9 @@ echo "loading websocket"
 
 npm install --prefix ~/xipi websocket
 
+echo "loading open"
+npm install --prefix ~/xipi open
+
 echo "!!!! Install Complete !!!"
 echo
 echo
