@@ -3,36 +3,38 @@
  *
  * Xi Server
  *
- * * Version: v.002
+ * * Version: v.003
  *
- * * Updated 19 Sep 2014
+ * * Updated 26 Sep 2014
  *
  * This file is common to all Xi Server types and is used to instantiate XiDuino, XiPi and XiBone servers
  *
  * Selecting the appropriate board type is done through a command line option
  *
+ * Usage:
+ * node xiserver.js [BOARD_ID] [URL] [DEBUG_LEVEL] [COM_PORT] [IP_PORT]
+ *
  * BOARD_ID Options:
- * ard = arduino deafult
+ * ard = arduino default
  * bbb = beaglebone black
  * rpi = raspberry pi
+ *
+ * URL:
+ * Browser is launched to this URL when server is started
+ * Default = "scratch.mit.edu"
+ * To suppress launching, set this parameter to null
  *
  * DEBUG_LEVEL = 0 (no debug)
  *               3 (maximum debug)
  *
- *""COM_PORT" = force a  specific com port to be used for arduino
- * Quoted string, eg: "/dev/ttyACM0" or "COM3"
+ *COM_PORT = force a  specific com port to be used for arduino
+ * eg: "/dev/ttyACM0" or "COM3"
  *
- * command line invocation:
+ * IP_PORT
+ * IP port number
+ * Default = 1234
  *
- * node xiserver.js BOARD_ID_OPTION [DEBUG_LEVEL] ["COM_PORT"]
  *
- *
- *
- * i.e. beaglebone black:
- *
- * node xiserver.js bbb
- *
-
  *
  * @author: Alan Yorinks
  Copyright (c) 2014 Alan Yorinks All right reserved.
@@ -53,14 +55,7 @@
  *
  */
 
-// command line entry to start a server
-//
-// node xiserver.js [serverType] [debugLevel]
-//
-// where serverType and debugLevel are optional
-// valid option values:
-// serverType: 'ard' 'bbb' 'rpi'
-// debugLevel: 0-3
+
 
 // when running on linux, the command needs to be prefaced by sudo
 
@@ -71,33 +66,48 @@ var five = require('johnny-five');
 
 
 var board; // a johnny-five 'board'
-var debugLevel; // set by user in command line invocation
-var serverType; // set by user in command line invocation
-var comPort; // communications port for Arduino - allows user to select the com port
 
-// save the server type from the command line
+var serverType = 'ard'; // set by user in command line invocation
+var urlAddr = 'http://scratch.mit.edu';
+var debugLevel = 0; // set by user in command line invocation
+var comPort; // communications port for Arduino - allows user to select the com port
+var ipPort = 1234; // ip port number
+
+// retrieve any command line parameters
 
 switch (process.argv.length) {
     // serverType provided but not debugLevel
     case 3:
         serverType = process.argv[2];
-        debugLevel = 0;
         break;
-    // all options provided
     case 4:
         serverType = process.argv[2];
-        debugLevel = process.argv[3];
+        urlAddr = process.argv[3];
         break;
+    // all options provided
     case 5:
         serverType = process.argv[2];
-        debugLevel = process.argv[3];
-        comPort = process.argv[4];
+        urlAddr = process.argv[3];
+        debugLevel = process.argv[4];
+        break;
+    case 6:
+        serverType = process.argv[2];
+        urlAddr = process.argv[3];
+        debugLevel = process.argv[4];
+        comPort = process.argv[5];
+        break;
+    case 7:
+        serverType = process.argv[2];
+        urlAddr = process.argv[3];
+        debugLevel = process.argv[4];
+        comPort = process.argv[5];
+        ipPort = process.argv[6];
         break;
     // no options provided
     case 2:
     default:
-        serverType = 'ard';
-        debugLevel = 0;
+    //serverType = 'ard';
+    //debugLevel = 0;
 }
 
 // create the correct johnny-five board type
@@ -106,6 +116,7 @@ switch (serverType) {
         console.log('XiPi Server ...');
         var raspi = require('raspi-io');
 
+        //noinspection JSCheckFunctionSignatures
         board = new five.Board({
             io: new raspi()
         });
@@ -113,6 +124,7 @@ switch (serverType) {
     case 'bbb':
         console.log('XiBone Server ...');
         var BeagleBone = require('beaglebone-io');
+        //noinspection JSCheckFunctionSignatures
         board = new five.Board({
             io: new BeagleBone()
         });
@@ -123,16 +135,18 @@ switch (serverType) {
         console.log('XiDuino Server ...');
 
         // for arduino servers the default web browser is automatically opened to the scratch web page
-        // TODO: provide an option to suppress opening the web browser
-        // TODO: provide an option to specify the url
-        var open = require('open'); // this is the package that opens the browser
-        open('http://scratch.mit.edu/');
+        if (urlAddr !== "null") {
+            var open = require('open'); // this is the package that opens the browser
+            open(urlAddr);
+        }
         // user wants to select the com port manually
-        if (comPort !== undefined){
+        if (comPort !== undefined) {
+            //noinspection JSCheckFunctionSignatures
             board = new five.Board({port: comPort});
         }
         // allow board to automatically find the com port
         else {
+            //noinspection JSCheckFunctionSignatures
             board = new five.Board();
         }
 }
@@ -148,9 +162,9 @@ board.on('ready', function () {
     });
 
     // Create an IP listener using the http server
-    server.listen(1234, function () {
+    server.listen(ipPort, function () {
         if (debugLevel >= 1) {
-            console.log('Webserver created and listening on port 1234');
+            console.log('Webserver created and listening on port ' + ipPort);
         }
     });
 
@@ -393,7 +407,7 @@ board.on('ready', function () {
                 break;
             default:
                 // it was set before, but if it is the same just return true and continue on
-                if( currentMode === mode){
+                if (currentMode === mode) {
                     return true
                 }
                 else {
