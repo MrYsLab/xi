@@ -12,6 +12,9 @@ sudo chmod ugo+x ./xiduino.sh
 echo "copying xiduino.sh"
 cp ./xiduino.sh ~/xiduino/.
 
+echo "copying xiduino4Snap.sh"
+cp ./xiduino4Snap.sh ~/xiduino/.
+
 echo "copying xiserver.js"
 cp ../../xiserver/xiserver.js ~/xiduino/.
 

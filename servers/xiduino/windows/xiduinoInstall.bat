@@ -8,6 +8,7 @@ mkdir "%userprofile%"\Documents\xi
 
 echo "copying files to the xi directory"
 copy xiduino.bat "%userprofile%"\Documents\xi
+copy xiduino4Snap.bat "%userprofile%"\Documents\xi
 copy ..\..\xiserver\xiserver.js "%userprofile%"\Documents\xi
 copy xi.ico "%userprofile%"\Documents\xi
 copy ..\..\..\clients\scratch\projects\Xi4S_Starter_Project.sb2 "%userprofile%"\Documents\xi
