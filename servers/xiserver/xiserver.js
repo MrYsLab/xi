@@ -73,10 +73,19 @@ var debugLevel = 0; // set by user in command line invocation
 var comPort; // communications port for Arduino - allows user to select the com port
 var ipPort = 1234; // ip port number
 
+var servoArray = [];    // array of servo devices added to the board
+var piezoArray = [];    // array of piezo devices added to the board
+var stepperArray = [];  // array of steppers, both 4 wire and driver
+
+
 // retrieve any command line parameters
+// Server Type - Arduino, BeagleBone Black, Raspberry Pi
+// URL Address - to open either Scratch or Snap!
+// Debug Level - send info to the console
+// Com Port -   allows user to manually select the Serial Com port instead of using autodetect
+// IP Port -    allows user to set IP Port. Used when multiple arduinos are connected to a single PC.
 
 switch (process.argv.length) {
-    // serverType provided but not debugLevel
     case 3:
         serverType = process.argv[2];
         break;
@@ -151,7 +160,7 @@ switch (serverType) {
         }
 }
 
-// when the board construction completes a 'ready' message is emitted
+// when the board construction completes a 'ready' message is emitted - this is the "kickoff" point
 board.on('ready', function () {
     var connection; // WebSocket connection to client
 
@@ -173,7 +182,7 @@ board.on('ready', function () {
         httpServer: server
     });
 
-    // each time we create a new device upon request from the client, it is added to the devices array
+    // each time we create a new input device upon request from the client, it is added to the devices array
     var devices = [];
 
     // WebSocket server has been activated and a 'request' message has been received from client websocket
@@ -206,6 +215,11 @@ board.on('ready', function () {
                         console.log('Xi Server has a websocket to Xi4S');
                     }
                     break;
+
+            /**********************************************************************************************
+             *********************   PIN MODE COMMAND HANDLERS    *****************************************
+             **********************************************************************************************/
+
                 // set pin mode to analog in
                 // create an an instance of an analog sensor and add it to the array
                 case 'setAnalogIN':
@@ -240,7 +254,7 @@ board.on('ready', function () {
                     }
                     addSwitch(index, pin, deviceID);
                     break;
-                // set up pin as PWM - we do not create device objects for pins, but access them directly
+                // set up pin as PWM - we do not create device objects for output pins, but access them directly
                 case 'setAnalogOUT':
                     pin = msg[2];
                     // PWM is considered here to be a digital mode
@@ -249,7 +263,7 @@ board.on('ready', function () {
                     }
                     break;
                 // set up pin as digital output
-                // we do not create device objects for pins, but access them directly
+                // we do not create device objects for output pins, but access them directly
                 case 'setDigitalOUT':
                     pin = msg[2];
                     // just set the pin (msg[2], to the output mode.
@@ -257,6 +271,124 @@ board.on('ready', function () {
                         board.pinMode(pin, five.Pin.OUTPUT);
                     }
                     break;
+                // This will set a pin to servo mode and add a standard servo device
+                case 'setStandardServoMode':
+                    pin = msg[2];
+                    if (debugLevel >= 3) {
+                        console.log('setServoMode current mode === ' + board.io.pins[pin].mode);
+                        console.log('pin = ' + pin);
+                        console.log(msg);
+                    }
+                    if (validateDigitalSetMode(msg[1], pin, five.Pin.SERVO) !== false) {
+                        board.pinMode(pin, five.Pin.SERVO);
+                        if (debugLevel >= 2) {
+                            console.log("adding servo", pin);
+                        }
+                        addServo(pin, 'standard', false);
+                    }
+                    break;
+                // This will set a pin to Servo and add a continuous servo device
+                case 'setContinuousServoMode':
+                    inverted = false;
+                    pin = msg[2];
+                    if (debugLevel >= 3) {
+                        console.log('setServoMode current mode === ' + board.io.pins[pin].mode);
+                        console.log('pin = ' + pin);
+                        console.log(msg);
+                    }
+
+                    if (validateDigitalSetMode(msg[1], pin, five.Pin.SERVO) !== false) {
+                        board.pinMode(pin, five.Pin.SERVO);
+                        if (debugLevel >= 2) {
+                            console.log("adding servo", pin);
+                        }
+                        addServo(pin, 'continuous');
+                    }
+                    break;
+                // Set a pin for HC-SR04 type support and a ping device
+                // Requires a replacement sketch for StandardFirmata
+                // https://github.com/rwaldron/johnny-five/wiki/Ping#setup
+                case 'setSonarMode':
+                    deviceID = msg[3];
+                    pin = msg[2];
+                    if (debugLevel >= 1) {
+                        console.log("setSonarMode", msg);
+                    }
+                    if (validateDigitalSetMode(msg[1], pin, five.Pin.INPUT) === false) {
+                        break;
+                    }
+                    index = devices.length;
+                    addPing(index, pin, deviceID);
+                    break;
+                // set a pin for infrared distance sensing and add the device
+                case 'setInfraRedDistanceMode':
+                    deviceID = msg[3];
+                    pin = msg[2];
+                    if (debugLevel >= 1) {
+                        console.log("setInfraRedDistanceMode", msg);
+                    }
+                    if (validateAnalogSetMode(msg[1], pin, five.Pin.ANALOG) === false) {
+                        break;
+                    }
+                    index = devices.length;
+                    addInfraRed(index, pin, deviceID);
+                    break;
+                // set a pin to piezo tone mode and add the device
+                case 'setToneMode':
+                    pin = msg[2];
+                    if (validateDigitalSetMode(msg[1], pin, five.Pin.OUTPUT) !== false) {
+                        addPiezo(pin);
+                    }
+                    break;
+                // The stepper motor support requires a replacement sketch for StandardFirmata
+                //  https://github.com/soundanalogous/AdvancedFirmata
+                // set the pins for a 4 wire stepper and a 4 wire stepper device
+                case 'fourWireStepperPins':
+                    var pinA = parseInt(msg[2]);
+                    var pinB = parseInt(msg[3]);
+                    var pinC = parseInt(msg[4]);
+                    var pinD = parseInt(msg[5]);
+                    var revSteps = parseInt(msg[6]);
+                    if (debugLevel >= 1) {
+                        console.log("fourWireStepperPin", msg);
+                    }
+                    if (validateDigitalSetMode(msg[1], pinA, five.Pin.OUTPUT) === false) {
+                        break;
+                    }
+                    if (validateDigitalSetMode(msg[1], pinB, five.Pin.OUTPUT) === false) {
+                        break;
+                    }
+                    if (validateDigitalSetMode(msg[1], pinC, five.Pin.OUTPUT) === false) {
+                        break;
+                    }
+                    if (validateDigitalSetMode(msg[1], pinD, five.Pin.OUTPUT) === false) {
+                        break;
+                    }
+                    addFourWireStepper(pinA, pinB, pinC, pinD, revSteps);
+                    break;
+                // The stepper motor support requires a replacement sketch for StandardFirmata
+                //  https://github.com/soundanalogous/AdvancedFirmata
+                // set the pins for a stepper driver board and a driver stepper device
+                case 'stepperDriverPins':
+                    if (debugLevel >= 1) {
+                        console.log("stepperDriverPins", msg);
+                    }
+                    pinA = parseInt(msg[2]);
+                    pinB = parseInt(msg[3]);
+                    revSteps = parseInt(msg[4]);
+                    if (validateDigitalSetMode(msg[1], pinA, five.Pin.OUTPUT) === false) {
+                        break;
+                    }
+                    if (validateDigitalSetMode(msg[1], pinB, five.Pin.OUTPUT) === false) {
+                        break;
+                    }
+                    addDriverStepper(pinA, pinB, revSteps);
+                    break;
+
+            /**********************************************************************************************
+             *********************   COMMAND BLOCK HANDLERS             **********************************
+             **********************************************************************************************/
+
                 // write out the digital value to the pin
                 case 'digitalWrite':
                     if (debugLevel >= 3) {
@@ -265,7 +397,7 @@ board.on('ready', function () {
                     // validate that this pin was initially set to correct mode
                     if (board.io.pins[msg[2]].mode !== five.Pin.OUTPUT) {
                         connection.send('invalidPinCommand/Board ' + msg[1] + ' Pin ' + msg[2] +
-                            ' This pin was not configured for digital write');
+                        ' This pin was not configured for digital write');
                     }
                     else {
                         if (msg[3] === 'Off') {
@@ -292,12 +424,263 @@ board.on('ready', function () {
                     if (board.io.pins[msg[2]].mode !== five.Pin.PWM) {
                         // send alert string
                         connection.send('invalidPinCommand/Board ' + msg[1] + ' Pin ' + pin
-                            + ' This pin was not configured for analog write');
+                        + ' This pin was not configured for analog write');
                     }
                     else {
                         board.analogWrite(msg[2], msg[3]);
                     }
                     break;
+                // play a tone
+                case 'playTone':
+                    pin = msg[2];
+                    var frequency = msg[3];
+                    var duration = msg[4];
+
+                    if (debugLevel >= 3) {
+                        console.log('tone pin current mode === ' + board.io.pins[pin].mode);
+                        console.log('pin = ' + pin);
+                        console.log(msg);
+                    }
+                    if (board.io.pins[pin].mode !== five.Pin.OUTPUT) {
+                        // send alert string
+                        connection.send('invalidPinCommand/Board ' + msg[1] + ' Pin ' + pin
+                        + ' This pin was not configured for TONE OUTPUT Control');
+                        break;
+                    }
+                    else {
+                        // retrieve piezo from array
+                        for (i = 0; i < piezoArray.length; i++) {
+                            if (piezoArray[i].pin === pin) {
+                                piezoArray[i].frequency(frequency, duration);
+                                return;
+                            }
+                        }
+                        if (debugLevel >= 3) {
+                            console.log('playTone - piezo not found for pin ' + pin);
+                        }
+                    }
+                    break;
+                case 'noTone':
+                    pin = msg[2];
+                    if (debugLevel >= 3) {
+                        console.log('notone for pin' + pin);
+                    }
+                    for (i = 0; i < piezoArray.length; i++) {
+                        if (piezoArray[i].pin === pin) {
+                            piezoArray[i].noTone();
+                            return;
+                        }
+                    }
+                    if (debugLevel >= 3) {
+                        console.log('noTone - piezo not found for pin ' + pin);
+                    }
+                    break;
+                // move the servo to position in degrees
+                // message indices: 1= board, 2 = pin, 3 = degrees
+                case 'moveStandardServo':
+                    pin = parseInt(msg[2]);
+                    var degrees = parseInt(msg[3]);
+                    var inverted = msg[4];
+                    if (debugLevel >= 3) {
+                        console.log('servo current mode === ' + board.io.pins[pin].mode);
+                        console.log('pin = ' + pin);
+                        console.log(msg);
+                    }
+                    if (board.io.pins[pin].mode !== five.Pin.SERVO) {
+                        // send alert string
+                        connection.send('invalidPinCommand/Board ' + msg[1] + ' Pin ' + pin
+                        + ' This pin was not configured for Servo Control');
+                        break;
+                    }
+                    else {
+                        // retrieve servo from array
+                        for (var i = 0; i < servoArray.length; i++) {
+                            if (servoArray[i].pin === pin) {
+                                if (servoArray[i].type !== "standard") {
+                                    connection.send('invalidPinCommand/Board ' + msg[1] + ' Pin ' + pin
+                                    + ' This pin was not configured for Standard Servo Control');
+                                    return;
+                                }
+                                servoArray[i].isInverted = inverted !== 'False';
+                                servoArray[i].to(degrees);
+                                return;
+                            }
+                        }
+                        if (debugLevel >= 3) {
+                            console.log('moveStandardServo - servo not found for pin ' + pin);
+                        }
+                    }
+                    break;
+                // move a continuous servo in the given direction and speed
+                case 'moveContinuousServo':
+
+                    pin = parseInt(msg[2]);
+                    var direction = msg[3];
+                    inverted = msg[4];
+                    var speed = parseFloat(msg[5]);
+                    speed = parseFloat(speed.toFixed(2));
+                    if (debugLevel >= 3) {
+                        console.log('servo current mode === ' + board.io.pins[pin].mode);
+                        console.log('pin = ' + pin);
+                        console.log(msg);
+                    }
+                    if (board.io.pins[pin].mode !== five.Pin.SERVO) {
+                        // send alert string
+                        connection.send('invalidPinCommand/Board ' + msg[1] + ' Pin ' + pin
+                        + ' This pin was not configured for Servo Control');
+                        break;
+                    }
+                    else {
+
+                        // retrieve servo from array
+                        for (i = 0; i < servoArray.length; i++) {
+                            if (servoArray[i].pin === pin) {
+                                if (servoArray[i].type !== "continuous") {
+                                    connection.send('invalidPinCommand/Board ' + msg[1] + ' Pin ' + pin
+                                    + ' This pin was not configured for Continuous Servo Control');
+                                    return;
+                                }
+
+                                if (speed >= 0.0 && speed <= 1.0) {
+                                    servoArray[i].isInverted = inverted !== 'False';
+                                    if (direction === 'CW') {
+                                        servoArray[i].cw(speed);
+                                    }
+                                    else {
+                                        servoArray[i].ccw(speed);
+                                    }
+                                    return;
+                                }
+                                else {
+                                    connection.send('invalidSetMode/Board ' + msg[1] + ' Pin ' + pin +
+                                    ' Speed must be in the range of 0.0 to 1.0');
+                                }
+                                return;
+                            }
+                        }
+                        if (debugLevel >= 3) {
+                            console.log('moveContinuousServo - servo not found for pin ' + pin);
+                        }
+                    }
+                    break;
+                // stop servo motion - used for both standard and continuous
+                case 'stopServo':
+                    pin = parseInt(msg[2]);
+                    if (debugLevel >= 3) {
+                        console.log('stopServo servo current mode === ' + board.io.pins[pin].mode);
+                        console.log('pin = ' + pin);
+                        console.log(msg);
+                    }
+                    if (board.io.pins[pin].mode !== five.Pin.SERVO) {
+                        // send alert string
+                        connection.send('stopServo  invalidPinCommand/Board  ' + +msg[1] + ' Pin ' + pin
+                        + ' This pin was not configured for Servo Control');
+                        break;
+                    }
+                    else {
+
+                        // retrieve servo from array
+                        for (i = 0; i < servoArray.length; i++) {
+                            if (servoArray[i].pin === pin) {
+                                servoArray[i].stop();
+                                return;
+                            }
+                        }
+                        if (debugLevel >= 3) {
+                            console.log('stopServo - servo not found for pin ' + pin);
+                        }
+                    }
+                    break;
+                // move a stepper motor - this works for both 4 wire and driver.
+                case 'moveStepper':
+                    pin = parseInt(msg[2]);
+                    var rpms = parseInt(msg[3]);
+                    var dir = msg[4];
+                    var acc = parseInt(msg[5]);
+                    var dec = parseInt(msg[6]);
+                    var stp = parseInt(msg[7]);
+
+
+                    if (debugLevel >= 3) {
+                        console.log('moveStepper mode ');
+                        console.log('pin = ' + pin);
+                        console.log(msg);
+                    }
+
+                    if (dir === 'CW') {
+                        dir = five.Stepper.DIRECTION.CW;
+                    }
+                    else {
+                        dir = five.Stepper.DIRECTION.CCW;
+                    }
+                    if (board.io.pins[pin].mode !== board.io.MODES.STEPPER) {
+                        // send alert string
+                        connection.send('invalidPinCommand/Board ' + msg[1] + ' Pin ' + pin
+                        + ' This pin was not configured for Stepper Control');
+                        break;
+                    }
+                    else {
+
+                        // retrieve servo from array
+                        for (i = 0; i < stepperArray.length; i++) {
+                            if (stepperArray[i].pins.step === pin) {
+                                stepperArray[i].step({
+                                    steps: stp,
+                                    rpm: rpms,
+                                    direction: dir,
+                                    accel: acc,
+                                    decel: dec
+                                }, function () {
+                                    console.log("Done stepping!");
+                                });
+                                return;
+                            }
+
+                        }
+
+                        if (debugLevel >= 3) {
+                            console.log('moveStepper - stepper not found for pin ' + pin);
+                        }
+                    }
+                    break;
+
+                // sets number of steps to 0 to stop stepper movement
+                case 'stopStepper':
+                    pin = parseInt(msg[2]);
+
+                    if (debugLevel >= 3) {
+                        console.log('stopSStepper servo current mode === ' + board.io.pins[pin].mode);
+                        console.log('pin = ' + pin);
+                        console.log(msg);
+                    }
+                    if (board.io.pins[pin].mode !== board.io.MODES.STEPPER) {
+                        // send alert string
+                        connection.send('stopStepper  invalidPinCommand/Board  ' + +msg[1] + ' Pin ' + pin
+                        + ' This pin was not configured for STEPPER Control');
+                        break;
+                    }
+                    else {
+
+                        // retrieve servo from array
+                        for (i = 0; i < stepperArray.length; i++) {
+                            if (stepperArray[i].pins.step === pin) {
+                                stepperArray[i].step({
+                                    steps: 0,
+                                    direction: five.Stepper.DIRECTION.CW
+                                }, function () {
+                                    console.log("stopped stepper pin " + pin);
+                                });
+                                return;
+                            }
+                        }
+                        if (debugLevel >= 3) {
+                            console.log('stopStepper - stepper not found for pin ' + pin);
+                        }
+                    }
+
+                    break;
+
+
                 case 'resetBoard':
                     // reset the board
                     if (debugLevel >= 2) {
@@ -309,15 +692,23 @@ board.on('ready', function () {
                     console.log('Xi Server unknown message received: ' + msg[0]);
             }
         });
-
         connection.on('close', function (connection) {
             console.log('Client closed connection');
             boardReset();
         });
     });
 
-    // dynamically add a sensor and sensor listeners
-    // This function dynamically adds a sensor to the devices array.
+    /****************************************************************************************************************
+     ********************************* Device Creation Functions ****************************************************
+     ****************************************************************************************************************/
+
+    /***************************************************************************
+     ****************** INPUT Devices - Reporters ******************************
+     ***************************************************************************/
+
+    // dynamically add a sensor and sensor change listeners and their callback functions
+
+    // This function dynamically adds an analog sensor to the devices array.
     // It adds a listener for the 'change' event.
 
     function addSensor(index, myPin, myId) {
@@ -342,7 +733,64 @@ board.on('ready', function () {
         // add the 'change' listener to the device array
         devices[index].addListener('change', sensorCallbackChange);
         if (debugLevel >= 2) {
-            console.log('added change listener');
+            console.log('addSensor: added change listener');
+            console.log('devices length = ' + devices.length + ' index = ' + index);
+        }
+    }
+
+    // add an HC-SR04 type device
+    function addPing(index, myPin, myId) {
+
+        // create the device and add it to the array
+        // index already calculated to current length of array, so entry will be added to end of array
+        devices[index] = new five.Ping({
+            pin: myPin,
+            id: myId
+        });
+        // event listener call back function for the sensor
+        var pingCallbackChange = function () {
+
+            if (debugLevel >= 1) {
+                console.log(' sensor callback inches ' + devices[index].id + ' value = ' + devices[index].inches);
+            }
+            connection.send('dataUpdate/' + devices[index].id + '/' + devices[index].inches.toFixed(2));
+        };
+
+        // add the 'change' listener to the device array
+        devices[index].addListener('change', pingCallbackChange);
+        if (debugLevel >= 2) {
+            console.log('addPing: added change listener');
+            console.log('devices length = ' + devices.length + ' index = ' + index);
+        }
+    }
+
+    // add an infrared distance sensor
+    function addInfraRed(index, pin, myId) {
+
+        // create the device and add it to the array
+        // index already calculated to current length of array, so entry will be added to end of array
+        if (serverType === 'ard') {
+            pin = 'A' + pin;
+        }
+        devices[index] = new five.Distance({
+            pin: pin,
+            device: 'GP2Y0A21YK',
+            id: myId,
+            freq: 75
+        });
+
+        var infraredCallbackChange = function () {
+
+            if (debugLevel >= 1) {
+                console.log(' infrared callback inches ' + devices[index].id + ' value = ' + devices[index].inches);
+            }
+            connection.send('dataUpdate/' + devices[index].id + '/' + devices[index].inches.toFixed(2));
+        };
+
+        // add the 'change' listener to the device array
+        devices[index].addListener('change', infraredCallbackChange);
+        if (debugLevel >= 2) {
+            console.log('addInfraRed: added change listener');
             console.log('devices length = ' + devices.length + ' index = ' + index);
         }
     }
@@ -375,12 +823,72 @@ board.on('ready', function () {
         devices[index].addListener('close', switchOnCallbackChange);
     }
 
-    // place holder if we ever need to do anything
-    function boardReset() {
+    // dynamically add a servo to the devices array
+    function addServo(myPin, servoType) {
+        var servo = new five.Servo({
+            pin: myPin,
+            type: servoType
+        });
+
+        servoArray.push(servo);
     }
 
+    /***************************************************************************
+     ******************      OUTPUT Devices       ******************************
+     ***************************************************************************/
+
+    // dynamically add a piezo device to the piezo array
+    function addPiezo(pin) {
+        var piezo = new five.Piezo({
+            pin: pin
+        });
+        piezoArray.push(piezo);
+    }
+
+    function addFourWireStepper(pinA, pinB, pinC, pinD, revSteps) {
+        revSteps = parseInt(revSteps);
+        var stepper = new five.Stepper({
+            type: five.Stepper.TYPE.FOUR_WIRE,
+            pins: [pinA, pinB, pinC, pinD],
+            stepsPerRev: revSteps
+        });
+        stepperArray.push(stepper);
+
+    }
+
+    function addDriverStepper(pinA, pinB, revSteps) {
+        revSteps = parseInt(revSteps);
+        var stepper = new five.Stepper({
+            type: five.Stepper.TYPE.DRIVER,
+            pins: [pinA, pinB],
+            stepsPerRev: revSteps
+        });
+        stepperArray.push(stepper);
+    }
+
+    // place holder if we ever need to do anything
+    function boardReset() {
+        for (var i = 0; i < servoArray.length; i++) {
+            servoArray[i].stop();
+        }
+        for (i = 0; i < stepperArray.length; i++) {
+            if (stepperArray[i].pins.motor1 === pin) {
+                stepperArray[i].step({
+                    steps: 0,
+                    direction: five.Stepper.DIRECTION.CW
+                }, function () {
+                    console.log("stopped stepper pin " + pin);
+                });
+            }
+        }
+    }
+
+    /****************************************************************************************************
+     ************************  UTILITY FUNCTIONS ********************************************************
+     ****************************************************************************************************/
+
     // Determine if a digital pin mode has already been set and if not, does this pin support the mode?
-    // Returns true is all tests pass, or false if any one fails.
+    // Returns true fs all tests pass, or false if any one fails.
 
     function validateDigitalSetMode(boardID, pin, mode) {
 
@@ -392,7 +900,7 @@ board.on('ready', function () {
         if (board.io.pins.length < pin) {
             // send alert pin number exceeds number of pins on board
             connection.send('invalidSetMode/Board ' + boardID + ' Pin ' + pin +
-                ' Exceeds Maximum Number of Pins on Board');
+            ' Exceeds Maximum Number of Pins on Board');
             return false;
         }
 
@@ -412,7 +920,7 @@ board.on('ready', function () {
                 }
                 else {
                     connection.send('invalidSetMode/Board ' + boardID + ' Pin ' + pin + ' ' +
-                        ' was previously assigned mode ' + currentMode);
+                    ' was previously assigned mode ' + currentMode);
                     return false;
                 }
         }
@@ -438,6 +946,8 @@ board.on('ready', function () {
         return false;
     }
 
+    // determine if a pin can be set analog mode (PWM)
+
     function validateAnalogSetMode(boardID, pin) {
         // check to see if the pin number is in the range of possible analog pins
         var pinMapped = false;
@@ -446,7 +956,7 @@ board.on('ready', function () {
 
         if (pin > board.io.analogPins.length) {
             connection.send('invalidSetMode/Analog Board ' + boardID + ' Pin ' + pin +
-                ' Exceeds Maximum Number of Analog Pins on Board');
+            ' Exceeds Maximum Number of Analog Pins on Board');
             return false;
         }
 
@@ -461,7 +971,7 @@ board.on('ready', function () {
         }
         if (pinMapped === false) {
             connection.send('invalidSetMode/Analog Board ' + boardID + ' Pin ' + pin +
-                ' Pin analogChannel not found');
+            ' Pin analogChannel not found');
             return false;
         }
 
@@ -470,7 +980,7 @@ board.on('ready', function () {
         if (currentMode != undefined || currentMode != null) {
             // send alert string
             connection.send('invalidSetMode/Board ' + boardID + ' Pin ' + analogPin +
-                ' was previously assigned mode ' + currentMode);
+            ' was previously assigned mode ' + currentMode);
             return false;
         }
 

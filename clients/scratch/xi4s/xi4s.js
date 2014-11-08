@@ -11,8 +11,8 @@
  *
  * http://llk.github.io/scratch-extension-docs/
  *
- * Version v.001
- *
+ * Version v.002
+ * Nov 7, 2014
  *
  * @author: Alan Yorinks
  Copyright (c) 2014 Alan Yorinks All right reserved.
@@ -141,7 +141,7 @@ new (function () {
 
         function noServerAlert() {
             alert('Server not responding. Did you start XiServer for board ' +
-                boardID + '? Start the server, reload this page and try again');
+            boardID + '? Start the server, reload this page and try again');
             // we set the board status back to 0
             boardStatus = 0;
         }
@@ -240,10 +240,52 @@ new (function () {
                         if (debugLevel >= 1)
                             console.log('pin mode PWM');
                         // send out the pwm mode message
-                        // the host tests if the pin is PWM and if not will send back an 'xp' message
+                        // the host tests if the pin is PWM and if not will send back an 'xp' exception message
                         messageToServer = 'setAnalogOUT/' + boardID + '/' + pin;
                         if (debugLevel >= 2)
                             console.log('pinMode PWM Out Msg to server: ' + messageToServer);
+                        webSocketsArray[index].ws.send(messageToServer);
+                        break;
+                    case 'Standard Servo (PWM)':
+                        if (debugLevel >= 1)
+                            console.log('pin mode SERVO');
+                        // send out the servo mode message
+                        messageToServer = 'setStandardServoMode/' + boardID + '/' + pin;
+                        if (debugLevel >= 2)
+                            console.log('pinMode Standard Servo Out Msg to server: ' + messageToServer);
+                        webSocketsArray[index].ws.send(messageToServer);
+                        break;
+                    case 'Continuous Servo (PWM)':
+                        if (debugLevel >= 1)
+                            console.log('pin mode SERVO');
+                        // send out the servo mode message
+                        messageToServer = 'setContinuousServoMode/' + boardID + '/' + pin;
+                        if (debugLevel >= 2)
+                            console.log('pinMode ContinuousServo Out Msg to server: ' + messageToServer);
+                        webSocketsArray[index].ws.send(messageToServer);
+                        break;
+                    case 'SONAR Distance - (Digital In)':
+
+                        alert('If you are using an Arduino, this feature requires a special version of StandardFirmata.' +
+                        'See: https://github.com/rwaldron/johnny-five/wiki/Sonar for details.');
+                        messageToServer = 'setSonarMode/' + boardID + '/' + pin + '/' + sensorDataArray.length;
+                        if (debugLevel >= 2)
+                            console.log('pinMode Sonar Out Msg to server: ' + messageToServer);
+                        sendSetInputPinRequest(messageToServer, 'd', boardID, pin, index);
+                        break;
+                    case 'Infrared Distance (GP2Y0A21YK) - (Analog In)':
+                        messageToServer = 'setInfraRedDistanceMode/' + boardID + '/' + pin + '/' + sensorDataArray.length;
+                        if (debugLevel >= 2)
+                            console.log('pinMode infrared distance Out Msg to server: ' + messageToServer);
+                        sendSetInputPinRequest(messageToServer, 'a', boardID, pin, index);
+                        break;
+                    case 'Tone (Piezo)- (Digital Out)':
+                        if (debugLevel >= 1)
+                            console.log('pin mode Tone');
+                        // send out the servo mode message
+                        messageToServer = 'setToneMode/' + boardID + '/' + pin;
+                        if (debugLevel >= 2)
+                            console.log('pinMode Tone Mode Out Msg to server: ' + messageToServer);
                         webSocketsArray[index].ws.send(messageToServer);
                         break;
                     default:
@@ -257,6 +299,7 @@ new (function () {
         // board not yet established
         alert('Board ' + boardID + ' IP address must be set before a board is used');
     };
+
 
     // Digital output command block
     ext.digitalWrite = function (board, pin, value) {
@@ -273,6 +316,94 @@ new (function () {
         sendCommand(msg, board, 'analogWrite');
     };
 
+    // set servo position to position in degrees
+    ext.moveStandardServo = function (board, pin, degrees, inversion) {
+        var msg = 'moveStandardServo/' + board + '/' + pin + '/' + degrees + '/' + inversion;
+        sendCommand(msg, board, 'moveStandardServo');
+    };
+
+    // set servo position to position in degrees
+    ext.moveContinuousServo = function (board, pin, direction, inversion, speed) {
+        var msg = 'moveContinuousServo/' + board + '/' + pin + '/' + direction + '/' + inversion + '/' + speed;
+        sendCommand(msg, board, 'moveContinuousServo');
+    };
+
+    // stop servo
+    ext.stopServo = function (board, pin) {
+        var msg = 'stopServo/' + board + '/' + pin;
+        sendCommand(msg, board, 'stopServo');
+    };
+
+    // stop stepper
+    ext.stopStepper = function (board, pin) {
+        var msg = 'stopStepper/' + board + '/' + pin;
+        sendCommand(msg, board, 'stopStepper');
+    };
+
+    ext.fourWireStepperPins = function (board, pinA, pinB, pinC, pinD, stepsPerRev) {
+
+        alert('If you are using an Arduino, this feature requires a special version of StandardFirmata.' +
+        'See: https://github.com/soundanalogous/AdvancedFirmata for details.');
+
+        var pinArray = [];
+        pinArray.push(pinA);
+        pinArray.push(pinB);
+        pinArray.push(pinC);
+        pinArray.push(pinD);
+
+        // check for 4 unique values
+        var unique = pinArray.filter(onlyUnique);
+        if (unique.length !== 4) {
+            alert("The Four Pin Values Must Be Unique. Try Again!");
+            return;
+        }
+        var msg = 'fourWireStepperPins/' + board + '/' + pinA + '/' + pinB + '/' + pinC + '/' + pinD + '/' +  stepsPerRev;
+        sendCommand(msg, board, 'fourWireStepperPins');
+    };
+
+    ext.stepperDriverPins = function (board, pinA, pinB, stepsPerRev) {
+
+        alert('If you are using an Arduino, this feature requires a special version of StandardFirmata.' +
+        'See: https://github.com/soundanalogous/AdvancedFirmata for details.');
+
+        var pinArray = [];
+        pinArray.push(pinA);
+        pinArray.push(pinB);
+
+
+        // check for 2 unique values
+        var unique = pinArray.filter(onlyUnique);
+        if (debugLevel >= 2)
+            console.log('stepperDriverPins unique =  ' + unique);
+
+        if (debugLevel >= 2)
+            console.log('stepperDriverPins unique length =  ' + unique.length);
+
+        if (unique.length !== 2) {
+            alert("The Two Pin Values Must Be Unique. Try Again!");
+            return;
+        }
+        var msg = 'stepperDriverPins/' + board + '/' + pinA + '/' + pinB + '/' + stepsPerRev;
+        sendCommand(msg, board, 'stepperDriverPins');
+    };
+
+    ext.moveStepper = function (board, pin, rpm, direction, accel, decel, steps) {
+        var msg = 'moveStepper/' + board + '/' + pin + '/' + rpm + '/' + direction + '/' + accel + '/' + decel + '/' + steps;
+        sendCommand(msg, board, 'moveStepper');
+    };
+
+    // send command to play a tone
+    ext.playTone = function (board, pin, frequency, duration) {
+        var msg = 'playTone/' + board + '/' + pin + '/' + frequency + '/' + duration;
+        sendCommand(msg, board, 'playTone');
+    };
+
+    // turn tone off
+    ext.noTone = function (board, pin) {
+        var msg = 'noTone/' + board + '/' + pin;
+        sendCommand(msg, board, 'noTone');
+    };
+
     // Set the debug level
     ext.setDebugLevel = function (level) {
         debugLevel = level;
@@ -280,7 +411,7 @@ new (function () {
 
 
     /*******************************
-     **** Command Block Handlers ****
+     **** Response Block Handlers ****
      *******************************/
 
         // retrieve digital data from sensorDataArray
@@ -302,6 +433,39 @@ new (function () {
     };
 
 
+    // retrieve sonar data
+    ext.getSonarData = function (board, units, pin) {
+        if (debugLevel >= 1)
+            console.log('getSonarData - board: ' + board + 'Units' + units + ' Pin: ' + pin);
+
+        // generate a key for sensorDataArray
+        var key = genReporterKey(board, pin, 'd');
+        var distance = retrieveReporterData(board, pin, key);
+        if (units === 'CM') {
+            return (distance * 2.54).toFixed(2);
+        }
+        else {
+            return distance;
+        }
+    };
+
+    // retrieve infrared distance data
+    ext.getInfraredDistanceData = function (board, units, pin) {
+        if (debugLevel >= 1)
+            console.log('getInfraredDistanceData - board: ' + board + 'Units' + units + ' Pin: ' + pin);
+
+        // generate a key for sensorDataArray
+        var key = genReporterKey(board, pin, 'a');
+        var distance = retrieveReporterData(board, pin, key);
+        if (units === 'CM') {
+            return (distance * 2.54).toFixed(2);
+        }
+        else {
+            return distance;
+        }
+    };
+
+
     // helper functions
 
     //genReporterKey
@@ -318,6 +482,9 @@ new (function () {
 
     // Using the supplied key, this function will retrieve the latest data from the sensorDataArray.
     function retrieveReporterData(board, pin, key) {
+        if (debugLevel >= 1) {
+            console.log('retrieveReporterData: board: ' + board + ' pin ' + pin + ' key ' + key);
+        }
         // make sure that this is a unique key in the array
         for (var index = 0; index < sensorDataArray.length; index++) {
             if (sensorDataArray[index].key === key) {
@@ -326,7 +493,7 @@ new (function () {
         }
         // did not find an entry in the array
         alert('Did you set the pin mode for Board ' + board + ' Pin ' + pin +
-            '? No entry for this block in database');
+        '? No entry for this block in database');
         ext._shutdown();
     }
 
@@ -380,22 +547,53 @@ new (function () {
         alert(type + ' IP address for board ' + board + ' was not set');
     }
 
+    // return unique values contained within an array
+    function onlyUnique(value, index, self) {
+        return self.indexOf(value) === index;
+    }
+
+// usage example:
+//    var a = ['a', 1, 'a', 2, '1'];
+//    var unique = a.filter( onlyUnique ); // returns ['a', 1, 2, '1']
+
     // Block and block menu descriptions
     var descriptor = {
         blocks: [
-            ['w', 'Board %m.bdNum IPAddress/Port: %s : %s', 'setBoard', '1', 'localhost', '1234' ],
-            [' ', 'Board: %m.bdNum Set Pin %n as %m.pinMode', 'pinMode', '1', '2', 'Digital Input' ],
+            ['w', 'Board %m.bdNum IPAddress/Port: %s : %s', 'setBoard', '1', 'localhost', '1234'],
+            [' ', 'Board: %m.bdNum Set Pin %n as %m.pinMode', 'pinMode', '1', '2', 'Digital Input'],
             [' ', 'Board: %m.bdNum Digital Write Pin %n = %m.onOff ', 'digitalWrite', '1', '2', 'Off'],
             [' ', 'Board: %m.bdNum Analog Write(PWM) Pin %n = %n', 'analogWrite', '1', '3', '128'],
+            [' ', 'Board: %m.bdNum Move Standard Servo On Pin %n To %n Degrees - Inverted %m.inversion',
+                'moveStandardServo', '1', '3', '90', 'False'],
+            [' ', 'Board: %m.bdNum Move Continuous Servo On Pin: %n Dir: %m.motorDirection Inverted %m.inversion Servo Speed (0.0 - 1.0) %n ',
+                'moveContinuousServo', '1', '3', 'CW', 'False', '.5'],
+            [' ', 'Board: %m.bdNum Servo Stop! Pin: %n', 'stopServo', '1', '3'],
+            [' ', 'Board: %m.bdNum Play Tone on Pin: %n HZ: %n MS: %n', 'playTone', '1', '3', '1000', '500'],
+            [' ', 'Board: %m.bdNum Turn Tone Off For Pin: %n', 'noTone', '1', '3'],
             [' ', 'Set Debug Level %m.dbgLevel', 'setDebugLevel', '0'],
             ['r', 'Board: %m.bdNum Digital Input on Pin %n', 'getDigitalInputData', '1', '2'],
-            ['r', 'Board: %m.bdNum Analog Sensor Input on Pin %n', 'getAnalogSensorData', '1', '2']
+            ['r', 'Board: %m.bdNum Analog Sensor Input on Pin %n', 'getAnalogSensorData', '1', '2'],
+            ['r', 'Board: %m.bdNum Infrared Distance %m.distance Pin %n', 'getInfraredDistanceData', '1', 'CM', '2'],
+            ['r', 'Board: %m.bdNum SONAR Distance %m.distance Pin %n', 'getSonarData', '1', 'CM', '2'],
+            [' ', 'Board: %m.bdNum Set Pins For 4 Wire Bipolar Stepper %n   %n   %n   %n Steps Per Rev: %n', 'fourWireStepperPins', '1', '8', '9', '10', '11', '500'],
+            [' ', 'Board: %m.bdNum Set Pins For Stepper Driver Board: Step %n Direction %n Steps Per Rev: %n', 'stepperDriverPins', '1', '8', '9', 500],
+            [' ', 'Board: %m.bdNum Move Stepper On Pin %n  RPM: %n  Dir: %m.motorDirection  Accel: %n  Decel: %n  # of Steps: %n',
+                'moveStepper', '1', '8', '180', 'CW', '1600', '1600', '2000'],
+            [' ', 'Board: %m.bdNum Stepper Stop! Pin: %n', 'stopStepper', '1', '8'],
+
+
         ],
         menus: {
-            bdNum: [ '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'],
+            bdNum: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'],
             dbgLevel: ['0', '1', '2'],
             onOff: ['Off', 'On'],
-            pinMode: ['Digital Input', 'Digital Output', 'Analog Sensor Input', 'Analog (PWM) Output']
+            pinMode: ['Digital Input', 'Digital Output', 'Analog Sensor Input', 'Analog (PWM) Output',
+                'Standard Servo (PWM)', 'Continuous Servo (PWM)', 'Infrared Distance (GP2Y0A21YK) - (Analog In)',
+                'SONAR Distance - (Digital In)', 'Tone (Piezo)- (Digital Out)'],
+            motorDirection: ['CW', 'CCW'],
+            inversion: ['False', 'True'],
+            distance: ['CM', 'Inches']
+
         },
 
         url: 'http://mryslab.blogspot.com/'
@@ -403,6 +601,6 @@ new (function () {
 
 
     // Register the extension
-    ScratchExtensions.register('Xi4S_v_001', descriptor, ext);
+    ScratchExtensions.register('Xi4S_v_002_7Nov14', descriptor, ext);
 
 })();
