@@ -21,25 +21,25 @@ echo "copying xiserver.js"
 cp ../xiserver/xiserver.js ~/xibone/.
 
 echo "loading node-gyp"
-npm install --prefix ~/xibone node-gyp
+sudo npm install --prefix ~/xibone node-gyp
 
 echo "loading johnny-five"
-npm install --prefix ~/xibone johnny-five
+sudo npm install --prefix ~/xibone johnny-five
 
 echo "loading beaglebone-io"
 
-npm install  --prefix ~/xibone beaglebone-io
+sudo npm install  --prefix ~/xibone beaglebone-io
 
 echo "loading websocket"
 
-npm install --prefix ~/xibone websocket
+sudo npm install --prefix ~/xibone websocket
 
 echo "installing winston"
 
-npm install --prefix ~/xibone winston
+sudo npm install --prefix ~/xibone winston
 
 echo "installing open"
-npm install --prefix ~/xibone open
+sudo npm install --prefix ~/xibone open
 
 echo "!!!! Install Complete !!!"
 echo
