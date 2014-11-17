@@ -35,6 +35,7 @@ For Linux/Mac:
 sudo npm update beaglebone-io
 
 For Windows:
+
 npm update beaglebone-io
 
 ### Current Board/Device Support Table
