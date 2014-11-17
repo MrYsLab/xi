@@ -35,7 +35,7 @@
 
 new (function () {
     var ext = this;
-    console.log('Xi4s v.001');
+    console.log('Xi4s v.003');
 
     // 0 = no debug
     // 1 = low level debug
@@ -201,6 +201,7 @@ new (function () {
             if (webSocketsArray[index].id === boardID) {
                 // send message to server to create device(input devices) or set the pin mode (output device)
                 var messageToServer; // message to be sent to server
+                mode = extractMode(mode) ;
 
                 // the mode is the value prescribed in block descriptor section
                 switch (mode) {
@@ -306,6 +307,8 @@ new (function () {
         if (debugLevel >= 1) {
             console.log('digitalWrite Board: ' + board + ' Pin ' + pin + ' Value ' + value);
         }
+        // strip index number off of message to determine value to send to server
+        value = extractOffOn(value);
         var msg = 'digitalWrite/' + board + '/' + pin + '/' + value;
         sendCommand(msg, board, 'digitalWrite');
     };
@@ -318,12 +321,15 @@ new (function () {
 
     // set servo position to position in degrees
     ext.moveStandardServo = function (board, pin, degrees, inversion) {
+        inversion = extractInversion(inversion) ;
         var msg = 'moveStandardServo/' + board + '/' + pin + '/' + degrees + '/' + inversion;
         sendCommand(msg, board, 'moveStandardServo');
     };
 
     // set servo position to position in degrees
     ext.moveContinuousServo = function (board, pin, direction, inversion, speed) {
+        inversion = extractInversion(inversion) ;
+        direction = extractDirection(direction);
         var msg = 'moveContinuousServo/' + board + '/' + pin + '/' + direction + '/' + inversion + '/' + speed;
         sendCommand(msg, board, 'moveContinuousServo');
     };
@@ -388,6 +394,7 @@ new (function () {
     };
 
     ext.moveStepper = function (board, pin, rpm, direction, accel, decel, steps) {
+        direction = extractDirection(direction);
         var msg = 'moveStepper/' + board + '/' + pin + '/' + rpm + '/' + direction + '/' + accel + '/' + decel + '/' + steps;
         sendCommand(msg, board, 'moveStepper');
     };
@@ -441,6 +448,7 @@ new (function () {
         // generate a key for sensorDataArray
         var key = genReporterKey(board, pin, 'd');
         var distance = retrieveReporterData(board, pin, key);
+        units = extractDistance(units) ;
         if (units === 'CM') {
             return (distance * 2.54).toFixed(2);
         }
@@ -457,6 +465,7 @@ new (function () {
         // generate a key for sensorDataArray
         var key = genReporterKey(board, pin, 'a');
         var distance = retrieveReporterData(board, pin, key);
+        units = extractDistance(units) ;
         if (units === 'CM') {
             return (distance * 2.54).toFixed(2);
         }
@@ -552,6 +561,84 @@ new (function () {
         return self.indexOf(value) === index;
     }
 
+    // strip off the text to accommodate translations
+    function extractOffOn(value) {
+        var offOn = value.split('.');
+        if( offOn[0] === '1') {
+            return "Off"
+        }
+        else {
+            return "On";
+        }
+    }
+
+    function extractDirection(direction) {
+        var dirArray = direction.split('.');
+        if( dirArray[0] === '1') {
+            return "CW";
+        }
+        else {
+            return "CCW" ;
+        }
+    }
+
+    function extractDistance(distance) {
+        var distArray = distance.split('.');
+        if( distArray[0] === '1') {
+            return "CM";
+        }
+        else {
+            return "Inches" ;
+        }
+    }
+
+    function extractInversion(inversion) {
+        var invArray = inversion.split('.');
+        if( invArray[0] === '1' ) {
+            return "False";
+        }
+        else {
+            return "True" ;
+        }
+    }
+
+    function extractMode(mode) {
+        var modeArray = mode.split('.') ;
+        var serverMode = undefined;
+        switch( modeArray[0]) {
+            case '1':
+                serverMode = 'Digital Input';
+                break;
+            case '2':
+                serverMode = 'Digital Output';
+                break;
+            case '3':
+                serverMode = 'Analog Sensor Input';
+                break;
+            case '4':
+                serverMode = 'Analog (PWM) Output';
+                break;
+            case '5':
+                serverMode = 'Standard Servo (PWM)';
+                break;
+            case '6':
+                serverMode = 'Continuous Servo (PWM)';
+                break;
+            case '7':
+                serverMode = 'Infrared Distance (GP2Y0A21YK) - (Analog In)';
+                break;
+            case '8':
+                serverMode = 'SONAR Distance - (Digital In)';
+                break;
+            case '9':
+                serverMode = 'Tone (Piezo)- (Digital Out)';
+                break;
+            default:
+                console.log("extract mode unknown mode = " + modeArray[0]);
+        }
+        return serverMode;
+    }
+
 // usage example:
 //    var a = ['a', 1, 'a', 2, '1'];
 //    var unique = a.filter( onlyUnique ); // returns ['a', 1, 2, '1']
@@ -560,25 +647,25 @@ new (function () {
     var descriptor = {
         blocks: [
             ['w', 'Board %m.bdNum IPAddress/Port: %s : %s', 'setBoard', '1', 'localhost', '1234'],
-            [' ', 'Board: %m.bdNum Set Pin %n as %m.pinMode', 'pinMode', '1', '2', 'Digital Input'],
-            [' ', 'Board: %m.bdNum Digital Write Pin %n = %m.onOff ', 'digitalWrite', '1', '2', 'Off'],
+            [' ', 'Board: %m.bdNum Set Pin %n as %m.pinMode', 'pinMode', '1', '2', '1. Digital Input'],
+            [' ', 'Board: %m.bdNum Digital Write Pin %n = %m.onOff ', 'digitalWrite', '1', '2', '1. Off'],
             [' ', 'Board: %m.bdNum Analog Write(PWM) Pin %n = %n', 'analogWrite', '1', '3', '128'],
             [' ', 'Board: %m.bdNum Move Standard Servo On Pin %n To %n Degrees - Inverted %m.inversion',
-                'moveStandardServo', '1', '3', '90', 'False'],
+                'moveStandardServo', '1', '3', '90', '1. False'],
             [' ', 'Board: %m.bdNum Move Continuous Servo On Pin: %n Dir: %m.motorDirection Inverted %m.inversion Servo Speed (0.0 - 1.0) %n ',
-                'moveContinuousServo', '1', '3', 'CW', 'False', '.5'],
+                'moveContinuousServo', '1', '3', '1. CW', '1. False', '.5'],
             [' ', 'Board: %m.bdNum Servo Stop! Pin: %n', 'stopServo', '1', '3'],
             [' ', 'Board: %m.bdNum Play Tone on Pin: %n HZ: %n MS: %n', 'playTone', '1', '3', '1000', '500'],
             [' ', 'Board: %m.bdNum Turn Tone Off For Pin: %n', 'noTone', '1', '3'],
             [' ', 'Set Debug Level %m.dbgLevel', 'setDebugLevel', '0'],
             ['r', 'Board: %m.bdNum Digital Input on Pin %n', 'getDigitalInputData', '1', '2'],
             ['r', 'Board: %m.bdNum Analog Sensor Input on Pin %n', 'getAnalogSensorData', '1', '2'],
-            ['r', 'Board: %m.bdNum Infrared Distance %m.distance Pin %n', 'getInfraredDistanceData', '1', 'CM', '2'],
-            ['r', 'Board: %m.bdNum SONAR Distance %m.distance Pin %n', 'getSonarData', '1', 'CM', '2'],
+            ['r', 'Board: %m.bdNum Infrared Distance %m.distance Pin %n', 'getInfraredDistanceData', '1', '1. CM', '2'],
+            ['r', 'Board: %m.bdNum SONAR Distance %m.distance Pin %n', 'getSonarData', '1', '1. CM', '2'],
             [' ', 'Board: %m.bdNum Set Pins For 4 Wire Bipolar Stepper %n   %n   %n   %n Steps Per Rev: %n', 'fourWireStepperPins', '1', '8', '9', '10', '11', '500'],
             [' ', 'Board: %m.bdNum Set Pins For Stepper Driver Board: Step %n Direction %n Steps Per Rev: %n', 'stepperDriverPins', '1', '8', '9', 500],
             [' ', 'Board: %m.bdNum Move Stepper On Pin %n  RPM: %n  Dir: %m.motorDirection  Accel: %n  Decel: %n  # of Steps: %n',
-                'moveStepper', '1', '8', '180', 'CW', '1600', '1600', '2000'],
+                'moveStepper', '1', '8', '180', '1. CW', '1600', '1600', '2000'],
             [' ', 'Board: %m.bdNum Stepper Stop! Pin: %n', 'stopStepper', '1', '8'],
 
 
@@ -586,13 +673,13 @@ new (function () {
         menus: {
             bdNum: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'],
             dbgLevel: ['0', '1', '2'],
-            onOff: ['Off', 'On'],
-            pinMode: ['Digital Input', 'Digital Output', 'Analog Sensor Input', 'Analog (PWM) Output',
-                'Standard Servo (PWM)', 'Continuous Servo (PWM)', 'Infrared Distance (GP2Y0A21YK) - (Analog In)',
-                'SONAR Distance - (Digital In)', 'Tone (Piezo)- (Digital Out)'],
-            motorDirection: ['CW', 'CCW'],
-            inversion: ['False', 'True'],
-            distance: ['CM', 'Inches']
+            onOff: ['1. Off', '2. On'],
+            pinMode: ['1. Digital Input', '2. Digital Output', '3. Analog Sensor Input', '4. Analog (PWM) Output',
+                '5. Standard Servo (PWM)', '6. Continuous Servo (PWM)', '7. Infrared Distance (GP2Y0A21YK) - (Analog In)',
+                '8. SONAR Distance - (Digital In)', '9. Tone (Piezo)- (Digital Out)'],
+            motorDirection: ['1. CW', '2. CCW'],
+            inversion: ['1. False', '2. True'],
+            distance: ['1. CM', '2. Inches']
 
         },
 
@@ -601,6 +688,6 @@ new (function () {
 
 
     // Register the extension
-    ScratchExtensions.register('Xi4S_v_002_7Nov14', descriptor, ext);
+    ScratchExtensions.register('Xi4S_v_003_15Nov14', descriptor, ext);
 
 })();
