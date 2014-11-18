@@ -19,7 +19,7 @@ None
 
 ### Arduino/Device Wiring Information:
 1.    [HC-SR04 SONAR Distance Device](https://github.com/rwaldron/johnny-five/blob/master/docs/ping.md)
-2.    [Infrared Distance Sensor  - GP2Y0A21YK0F](https://www.adafruit.com/products/164)
+2.    [Infrared Distance Sensor  - GP2Y0A21YK0F -- Black Wire to ground, White wire to Analog Input Pin](https://www.adafruit.com/products/164)
 3.    [4 Wire Stepper Motor](https://learn.adafruit.com/adafruit-arduino-lesson-16-stepper-motors/breadboard-layout)
 
 ### BeageBone Black/Device Wiring Information:
