@@ -9,6 +9,10 @@ BeagleBone Black and Raspberry Pi boards using Scratch 2.0 or Snap! as a graphic
 
 Installation instructions are provided in the Installation and Usage Guide located in the documentation directory.
 
+French Block and Alert Translations provided by Seb Canet
+
+Translators Guide can be found in the Documentation Directory.
+
 ### Known Limitations Imposed By The Snap! Team:
 None
 
