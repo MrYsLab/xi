@@ -5,10 +5,10 @@ echo
 echo "creating xipi directory"
 mkdir -p ~/xipi
 
-echo "change permissions on xibone.sh"
+echo "change permissions on xipi.sh"
 sudo chmod ugo+x ./xipi.sh
 
-echo "copying xiduino.sh"
+echo "copying xipi.sh"
 cp ./xipi.sh ~/xipi/.
 
 echo "copying xiserver.js"

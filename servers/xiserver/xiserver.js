@@ -3,9 +3,9 @@
  *
  * Xi Server
  *
- * * Version: v.003
+ * * Version: v.004
  *
- * * Updated 26 Sep 2014
+ * * Updated 22 Nov 2014
  *
  * This file is common to all Xi Server types and is used to instantiate XiDuino, XiPi and XiBone servers
  *
@@ -67,6 +67,8 @@ var five = require('johnny-five');
 
 var board; // a johnny-five 'board'
 
+var xiServerVersion = "XiServer version .004 22 Nov 2014";
+
 var serverType = 'ard'; // set by user in command line invocation
 var urlAddr = 'http://scratch.mit.edu';
 var debugLevel = 0; // set by user in command line invocation
@@ -119,6 +121,7 @@ switch (process.argv.length) {
     //debugLevel = 0;
 }
 
+console.log(xiServerVersion);
 // create the correct johnny-five board type
 switch (serverType) {
     case 'rpi':
@@ -396,8 +399,7 @@ board.on('ready', function () {
                     }
                     // validate that this pin was initially set to correct mode
                     if (board.io.pins[msg[2]].mode !== five.Pin.OUTPUT) {
-                        connection.send('invalidPinCommand/Board ' + msg[1] + ' Pin ' + msg[2] +
-                        ' This pin was not configured for digital write');
+                        connection.send('invalidPinCommand/' + 2 + '/' + msg[1] + '/' + msg[2]);
                     }
                     else {
                         if (msg[3] === 'Off') {
@@ -416,6 +418,7 @@ board.on('ready', function () {
                     break;
                 // write out the analog value to the PWM pin
                 case 'analogWrite':
+                    pin = msg[2];
                     if (debugLevel >= 3) {
                         console.log('analogWrite current mode === ' + board.io.pins[msg[2]].mode);
                         console.log('pin = ' + pin);
@@ -423,8 +426,7 @@ board.on('ready', function () {
                     }
                     if (board.io.pins[msg[2]].mode !== five.Pin.PWM) {
                         // send alert string
-                        connection.send('invalidPinCommand/Board ' + msg[1] + ' Pin ' + pin
-                        + ' This pin was not configured for analog write');
+                        connection.send('invalidPinCommand/' + 3 + '/' + msg[1] + '/' + pin);
                     }
                     else {
                         board.analogWrite(msg[2], msg[3]);
@@ -443,8 +445,7 @@ board.on('ready', function () {
                     }
                     if (board.io.pins[pin].mode !== five.Pin.OUTPUT) {
                         // send alert string
-                        connection.send('invalidPinCommand/Board ' + msg[1] + ' Pin ' + pin
-                        + ' This pin was not configured for TONE OUTPUT Control');
+                        connection.send('invalidPinCommand/' + 4 + '/' + msg[1] + '/' + pin);
                         break;
                     }
                     else {
@@ -488,8 +489,7 @@ board.on('ready', function () {
                     }
                     if (board.io.pins[pin].mode !== five.Pin.SERVO) {
                         // send alert string
-                        connection.send('invalidPinCommand/Board ' + msg[1] + ' Pin ' + pin
-                        + ' This pin was not configured for Servo Control');
+                        connection.send('invalidPinCommand/' + 5 + '/' + msg[1] + '/' + pin);
                         break;
                     }
                     else {
@@ -497,8 +497,7 @@ board.on('ready', function () {
                         for (var i = 0; i < servoArray.length; i++) {
                             if (servoArray[i].pin === pin) {
                                 if (servoArray[i].type !== "standard") {
-                                    connection.send('invalidPinCommand/Board ' + msg[1] + ' Pin ' + pin
-                                    + ' This pin was not configured for Standard Servo Control');
+                                    connection.send('invalidPinCommand/' + 6 + '/' + msg[1] + '/' + pin);
                                     return;
                                 }
                                 servoArray[i].isInverted = inverted !== 'False';
@@ -526,8 +525,7 @@ board.on('ready', function () {
                     }
                     if (board.io.pins[pin].mode !== five.Pin.SERVO) {
                         // send alert string
-                        connection.send('invalidPinCommand/Board ' + msg[1] + ' Pin ' + pin
-                        + ' This pin was not configured for Servo Control');
+                        connection.send('invalidPinCommand/' + 5 + '/' + msg[1] + '/' + pin);
                         break;
                     }
                     else {
@@ -536,8 +534,7 @@ board.on('ready', function () {
                         for (i = 0; i < servoArray.length; i++) {
                             if (servoArray[i].pin === pin) {
                                 if (servoArray[i].type !== "continuous") {
-                                    connection.send('invalidPinCommand/Board ' + msg[1] + ' Pin ' + pin
-                                    + ' This pin was not configured for Continuous Servo Control');
+                                    connection.send('invalidPinCommand/' + 7 + '/' + msg[1] + '/' + pin);
                                     return;
                                 }
 
@@ -573,8 +570,7 @@ board.on('ready', function () {
                     }
                     if (board.io.pins[pin].mode !== five.Pin.SERVO) {
                         // send alert string
-                        connection.send('stopServo  invalidPinCommand/Board  ' + +msg[1] + ' Pin ' + pin
-                        + ' This pin was not configured for Servo Control');
+                        connection.send('invalidPinCommand/' + 5 + '/' + msg[1] + '/' + pin);
                         break;
                     }
                     else {
@@ -615,8 +611,7 @@ board.on('ready', function () {
                     }
                     if (board.io.pins[pin].mode !== board.io.MODES.STEPPER) {
                         // send alert string
-                        connection.send('invalidPinCommand/Board ' + msg[1] + ' Pin ' + pin
-                        + ' This pin was not configured for Stepper Control');
+                        connection.send('invalidPinCommand/' + 8 + '/' + msg[1] + '/' + pin);
                         break;
                     }
                     else {
@@ -655,8 +650,7 @@ board.on('ready', function () {
                     }
                     if (board.io.pins[pin].mode !== board.io.MODES.STEPPER) {
                         // send alert string
-                        connection.send('stopStepper  invalidPinCommand/Board  ' + +msg[1] + ' Pin ' + pin
-                        + ' This pin was not configured for STEPPER Control');
+                        connection.send('invalidPinCommand/' + 8 + '/' + msg[1] + '/' + pin);
                         break;
                     }
                     else {
@@ -919,8 +913,7 @@ board.on('ready', function () {
                     return true
                 }
                 else {
-                    connection.send('invalidSetMode/Board ' + boardID + ' Pin ' + pin + ' ' +
-                    ' was previously assigned mode ' + currentMode);
+                    connection.send('invalidSetMode/' + 9 + '/' + boardID + '/' + pin);
                     return false;
                 }
         }
@@ -942,7 +935,7 @@ board.on('ready', function () {
         }
 
         // alert pin does not support mode
-        connection.send('invalidSetMode/ Board ' + boardID + ' Pin ' + pin + ' does not support the requested mode');
+        connection.send('invalidSetMode/' + 1 + '/' + boardID + '/' + pin);
         return false;
     }
 
@@ -955,8 +948,7 @@ board.on('ready', function () {
         var analogPin;
 
         if (pin > board.io.analogPins.length) {
-            connection.send('invalidSetMode/Analog Board ' + boardID + ' Pin ' + pin +
-            ' Exceeds Maximum Number of Analog Pins on Board');
+            connection.send('invalidSetMode/' + 0 + '/' + boardID + '/' + pin);
             return false;
         }
 
@@ -970,8 +962,7 @@ board.on('ready', function () {
             }
         }
         if (pinMapped === false) {
-            connection.send('invalidSetMode/Analog Board ' + boardID + ' Pin ' + pin +
-            ' Pin analogChannel not found');
+            connection.send('invalidSetMode/' + 11 + '/' + boardID + '/' + pin);
             return false;
         }
 

@@ -35,7 +35,7 @@
 
 new (function () {
     var ext = this;
-    console.log('Xi4s v.003');
+    console.log('Xi4s v.004');
 
     // 0 = no debug
     // 1 = low level debug
@@ -634,55 +634,55 @@ new (function () {
         console.log('createAlert' + index, board, pin);
         var alertStrings = [
             // 0
-            "exceeds Maximum Number of Pins on Board.",
+            "dépasse le nombre maximum de broches détecté sur la carte.",
             // 1
-            "does not support the requested mode.",
+            "ne peut pas être configuré avec le mode voulu.",
             //2
-            "was not configured for digital write.",
+            "n'est pas configurée comme une sortie Digital.",
             //3
-            "was not configured for analog write.",
+            "n'est pas configurée comme une sortie Analogique.",
             //4
-            "was not configured for TONE OUTPUT Control.",
+            "n'est pas configurée comme une sortie Son.",
             //5
-            "was not configured for Servo Control.",
+            "n'est pas configurée pour commander des servo-moteurs.",
             //6
-            "was not configured for Standard Servo Control.",
+            "n'est pas configurée pour commander des servo-moteurs standards.",
             //7
-            "was not configured for Continuous Servo Control.",
+            "n'est pas configurée pour commander des servo-moteurs à rotation continue.",
             //8
-            "was not configured for Stepper Control.",
+            "n'est pas configurée pour commander des moteurs pas-à-pas.",
             //9
-            "this pin has already been assigned.",
+            "cette broche est déjà configurée, différemment.",
             //10
-            "Speed must be in the range of 0.0 to 1.0.",
+            "La vitesse doit être réglée avec une valeur dans un intervalle de 0,0 à 1,0.",
             //11
-            "does not support analog operation",
+            "ne peut pas effectuer d'opération de type analogique.",
             //12
-            "An IP entry already exists for this board.",
+            "Une adresse IP existe déjà pour cette carte.",
             //13
-            "If you are using an Arduino, this feature requires a special version of StandardFirmata." +
-            "See: https://github.com/rwaldron/johnny-five/wiki/Sonar for details.",
+            "Si vous utilisez une carte Arduino, cette fonction nécessite une version spéciale du programme 'StandardFirmata'." +
+            "Lire la page : https://github.com/rwaldron/johnny-five/wiki/Sonar pour les détails.",
             //14
-            "IP address must be set before a board is used",
+            "Une adresse IP doit être fixée avant de pouvoir utiliser la carte.",
             //15
-            "If you are using an Arduino, this feature requires a special version of StandardFirmata." +
-            "See: https://github.com/soundanalogous/AdvancedFirmata for details.",
+            "Si vous utilisez une carte Arduino, cette fonction nécessite une version spéciale du programme 'StandardFirmata'." +
+            "Lire la page : https://github.com/soundanalogous/AdvancedFirmata pour les détails.",
             //16
-            "The Four Pin Values Must Be Unique. Try Again!",
+            "Les 4 valeurs de numéro de broche doivent être uniques. Veuillez recommencer.",
             //17
-            "The Two Pin Values Must Be Unique. Try Again!",
+            "Les 2 valeurs de numéro de broche doivent être uniques. Veuillez recommencer.",
             //18
-            "Pin Mode was not set. ",
+            "Le mode de configuration de la broche n'a pas été défini. ",
             //19
-            "IP Address for this board was not set.",
+            "L'adresse IP de la carte n'a pas encore été fixée.",
             //20
-            "Server not responding. Did you start XiServer for this board?" +
-            "Please start the server, reload this page and try again"
+            "Le serveur ne répond pas. Avez-vous lancé un serveur XiServeur pour cette carte ?" +
+            "Veuillez lancer un serveur Xi et recharger cette page pour essayer à nouveau."
         ];
 
         var headerKeywords = {
-            board: "Board: ",
-            pin: "Pin: "
+            board: "Sur la carte n° ",
+            pin: "la broche "
         };
 
         var alertInfo = "";
@@ -702,40 +702,40 @@ new (function () {
     // Block and block menu descriptions
     var descriptor = {
         blocks: [
-            ['w', 'Board %m.bdNum IPAddress/Port: %s : %s', 'setBoard', '1', 'localhost', '1234'],
-            [' ', 'Board: %m.bdNum Set Pin %n as %m.pinMode', 'pinMode', '1', '2', '1. Digital Input'],
-            [' ', 'Board: %m.bdNum Digital Write Pin %n = %m.onOff ', 'digitalWrite', '1', '2', '1. Off'],
-            [' ', 'Board: %m.bdNum Analog Write(PWM) Pin %n = %n', 'analogWrite', '1', '3', '128'],
-            [' ', 'Board: %m.bdNum Move Standard Servo On Pin %n To %n Degrees - Inverted %m.inversion',
-                'moveStandardServo', '1', '3', '90', '1. False'],
-            [' ', 'Board: %m.bdNum Move Continuous Servo On Pin: %n Dir: %m.motorDirection Inverted %m.inversion Servo Speed (0.0 - 1.0) %n ',
-                'moveContinuousServo', '1', '3', '1. CW', '1. False', '.5'],
-            [' ', 'Board: %m.bdNum Servo Stop! Pin: %n', 'stopServo', '1', '3'],
-            [' ', 'Board: %m.bdNum Play Tone on Pin: %n HZ: %n MS: %n', 'playTone', '1', '3', '1000', '500'],
-            [' ', 'Board: %m.bdNum Turn Tone Off For Pin: %n', 'noTone', '1', '3'],
-            [' ', 'Set Debug Level %m.dbgLevel', 'setDebugLevel', '0'],
-            ['r', 'Board: %m.bdNum Digital Input on Pin %n', 'getDigitalInputData', '1', '2'],
-            ['r', 'Board: %m.bdNum Analog Sensor Input on Pin %n', 'getAnalogSensorData', '1', '2'],
-            ['r', 'Board: %m.bdNum Infrared Distance %m.distance Pin %n', 'getInfraredDistanceData', '1', '1. CM', '2'],
-            ['r', 'Board: %m.bdNum SONAR Distance %m.distance Pin %n', 'getSonarData', '1', '1. CM', '2'],
-            [' ', 'Board: %m.bdNum Set Pins For 4 Wire Bipolar Stepper %n   %n   %n   %n Steps Per Rev: %n', 'fourWireStepperPins', '1', '8', '9', '10', '11', '500'],
-            [' ', 'Board: %m.bdNum Set Pins For Stepper Driver Board: Step %n Direction %n Steps Per Rev: %n', 'stepperDriverPins', '1', '8', '9', 500],
-            [' ', 'Board: %m.bdNum Move Stepper On Pin %n  RPM: %n  Dir: %m.motorDirection  Accel: %n  Decel: %n  # of Steps: %n',
-                'moveStepper', '1', '8', '180', '1. CW', '1600', '1600', '2000'],
-            [' ', 'Board: %m.bdNum Stepper Stop! Pin: %n', 'stopStepper', '1', '8']
+            ['w', "utiliser comme carte n° %m.bdNum celle à l'adresse IP / port %s : %s", 'setBoard', '1', 'localhost', '1234'],
+            [' ', 'sur la carte n° %m.bdNum, activer la broche Digital %n en mode %m.pinMode', 'pinMode', '1', '2', '1. entrée'],
+            [' ', "sur la carte n° %m.bdNum, mettre l'état logique de la broche Digital %n à %m.onOff ", 'digitalWrite', '1', '2', 'faux / bas'],
+            [' ', 'sur la carte n° %m.bdNum, écrire sur la broche PWM~ %n la valeur %n', 'analogWrite', '1', '3', '128'],
+            [' ', 'sur la carte n° %m.bdNum, orienter le servo-moteur sur la broche %n de %n degrés - inversé ? %m.inversion',
+                'moveStandardServo', '1', '3', '90', '1. faux'],
+            [' ', 'sur la carte n° %m.bdNum, faire tourner le servo-moteur continu sur la broche %n dans la direction %m.motorDirection - inversé ? %m.inversion, à la vitesse (0.0 - 1.0) %n ',
+                'moveContinuousServo', '1', '3', '1. avant', '1. faux', '.5'],
+            [' ', 'sur la carte n° %m.bdNum, arrêter le servo-moteur de la broche %n !', 'stopServo', '1', '3'],
+            [' ', 'sur la carte n° %m.bdNum, jouer un son sur la broche %n de fréquence (Hz) %n sur une durée (ms) de %n', 'playTone', '1', '3', '1000', '500'],
+            [' ', 'sur la carte n° %m.bdNum, arrêter le son de la broche %n !', 'noTone', '1', '3'],
+            [' ', 'niveau de débogage : %m.dbgLevel', 'setDebugLevel', '0'],
+            ['r', "sur la carte n° %m.bdNum, l'état logique de la broche Digital %n", 'getDigitalInputData', '1', '2'],
+            ['r', 'sur la carte n° %m.bdNum, la valeur lue sur la broche analogique A %n', 'getAnalogSensorData', '1', '2'],
+            ['r', 'sur la carte n° %m.bdNum, la distance mesurée en %m.distance par le capteur Infra-Rouge de la broche %n', 'getInfraredDistanceData', '1', '1. cm', '2'],
+            ['r', 'sur la carte n° %m.bdNum, la distance mesurée en %m.distance par le Sonar de la broche %n', 'getSonarData', '1', '1. cm', '2'],
+            [' ', 'sur la carte n° %m.bdNum, activer pour un moteur pas-à-pas 4 fils les broches %n   %n   %n   %n avec une rotation de %n pas par tour', 'fourWireStepperPins', '1', '8', '9', '10', '11', '500'],
+            [' ', 'sur la carte n° %m.bdNum, activer la carte de moteur pas-à-pas pour la broche %n, dans la direction %n à raison de %n pas par tour', 'stepperDriverPins', '1', '8', '9', 500],
+            [' ', 'sur la carte n° %m.bdNum, faire tourner le moteur pas-à-pas sur la broche %n : %n tr/mn, direction %m.motorDirection , accélération : %n , décélération : %n pour un nb de pas : %n',
+                'moveStepper', '1', '8', '180', '1. avant', '1600', '1600', '2000'],
+            [' ', 'sur la carte n° %m.bdNum, arrêter le moteur pas-à-pas de la broche %n !', 'stopStepper', '1', '8']
 
 
         ],
         menus: {
             bdNum: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'],
             dbgLevel: ['0', '1', '2'],
-            onOff: ['1. Off', '2. On'],
-            pinMode: ['1. Digital Input', '2. Digital Output', '3. Analog Sensor Input', '4. Analog (PWM) Output',
-                '5. Standard Servo (PWM)', '6. Continuous Servo (PWM)', '7. Infrared Distance (GP2Y0A21YK) - (Analog In)',
-                '8. SONAR Distance - (Digital In)', '9. Tone (Piezo)- (Digital Out)'],
-            motorDirection: ['1. CW', '2. CCW'],
-            inversion: ['1. False', '2. True'],
-            distance: ['1. CM', '2. Inches']
+            onOff: ['1. faux / bas', '2. vrai / haut'],
+            pinMode: ['1. entrée', '2. sortie', '3. mesure analogique', '4. impulsions PWM~',
+                '5. servo-moteur standard (sur PWM~)', '6. servo-moteur à rotation continue (sur PWM~)', '7. mesure distance par Infra-Rouge (entrée Analogique)',
+                '8. mesure distance par Sonar (entrée Digital)', '9. sortie Son (sortie Digital)'],
+            motorDirection: ['1. avant', '2. arrière'],
+            inversion: ['1. faux', '2. vrai'],
+            distance: ['1. cm', '2. pouces']
 
         },
 
@@ -744,6 +744,6 @@ new (function () {
 
 
     // Register the extension
-    ScratchExtensions.register('Xi4S_v_003_19Nov14', descriptor, ext);
+    ScratchExtensions.register('Xi4S_v_004_FR_22Nov14', descriptor, ext);
 
 })();

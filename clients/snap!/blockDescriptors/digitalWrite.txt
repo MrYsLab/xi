@@ -1,0 +1,67 @@
+/*********************************************************************************************
+ *
+ *                                     * * * Xi4Snap * * *
+ *
+ *                                        digitalWrite
+ *
+ *
+ *
+ *********************************************************************************************
+ * Created by afy on 9/21/14.
+ *
+ * This is the Xi Client for Snap!
+ *
+ * Version v.001
+ *
+ *
+ * @author: Alan Yorinks
+ Copyright (c) 2014 Alan Yorinks All right reserved.
+
+ This program is free software; you can redistribute it and/or
+ modify it under the terms of the GNU General Public
+ License as published by the Free Software Foundation; either
+ version 3.0 of the License, or (at your option) any later version.
+
+ This library is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ Lesser General Public License for more details.
+
+ You should have received a copy of the GNU General Public
+ License along with this library; if not, write to the Free Software
+ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ *
+ */
+
+    // This function will check to see if a board has been established and if it has, will send a command
+    // message to the server
+function sendCommand(msg, board, type) {
+    if (window.xi_debugLevel >= 1) {
+        console.log('sendCommand: ' + msg + ' ' + board + ' ' + type);
+    }
+    for (var index = 0; index < window.xi_webSocketsArray.length; index++) {
+        if (window.xi_webSocketsArray[index].id === board) {
+            if (window.xi_debugLevel >= 2)
+                console.log('sendCommand: Message: ' + msg + ' board: ' + board);
+            // send out message
+            window.xi_webSocketsArray[index].ws.send(msg);
+            return;
+        }
+    }
+    // board was not established
+    alert(type + ' IP address for board ' + boardID + ' was not set');
+}
+
+
+ if( window.xi_beenHereDoneThat === undefined)
+ {
+     alert("The first block of Xi script must be either a Set Debug Level or Set IPAddress block.");
+ }
+
+
+
+if (window.xi_debugLevel >= 1) {
+    console.log('digitalWrite Board: ' + boardID + ' Pin ' + pin + ' Value ' + value);
+}
+var msg = 'digitalWrite/' + boardID + '/' + pin + '/' + value;
+sendCommand(msg, boardID, 'digitalWrite');

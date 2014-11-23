@@ -1,0 +1,205 @@
+/*********************************************************************************************
+ *
+ *                                     * * * Xi4Snap * * *
+ *
+ *                                          setPinMode
+ *
+ *
+ *
+ *********************************************************************************************
+ * Created by afy on 9/21/14.
+ *
+ * This is the Xi Client for Snap!
+ *
+ * Version v.002
+ * Nov 7, 2014
+ *
+ *
+ * @author: Alan Yorinks
+ Copyright (c) 2014 Alan Yorinks All right reserved.
+
+ This program is free software; you can redistribute it and/or
+ modify it under the terms of the GNU General Public
+ License as published by the Free Software Foundation; either
+ version 3.0 of the License, or (at your option) any later version.
+
+ This library is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ Lesser General Public License for more details.
+
+ You should have received a copy of the GNU General Public
+ License along with this library; if not, write to the Free Software
+ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ *
+ */
+
+
+//genReporterKey
+// Input: Board number
+//        Pin number
+//        Designator to differentiate between analog and digital - either 'a' or 'd'
+//
+// Returns the generated key
+function genReporterKey(boardNum, pinNum, designator) {
+    if (window.xi_debugLevel >= 1)
+        console.log('genReporterKey returns: ' + boardNum + designator + pinNum);
+    return boardNum + designator + pinNum;
+}
+
+function sendSetInputPinRequest(msgToServer, analogOrDigital, board, pin, wsIndex) {
+    var reporterArrayEntry = {key: null, data: -1}; // The entry we build to add to the xi_sensorDataArray
+
+    // generate a key so that we can use to retrieve the data from the reporterArrayEntry
+    reporterArrayEntry.key = genReporterKey(board, pin, analogOrDigital);
+
+    if (window.xi_debugLevel >= 1)
+        console.log('sendInputPinRequest generated key = ' + reporterArrayEntry.key);
+
+    var found = false;
+    // make sure that this is a unique key in the array
+    for (var index = 0; index < window.xi_sensorDataArray.length; index++) {
+        if (window.xi_sensorDataArray[index].key === reporterArrayEntry.key) {
+            found = true;
+            console.log("sendInputPinReq entry exists");
+        }
+    }
+
+
+    // it is unique so go ahead and add the record to the array
+    if (found === false) {
+        window.xi_sensorDataArray.push(reporterArrayEntry);
+        //}
+        // now we can safely send the set pin message to the Xi Server to create the device
+        if (window.xi_debugLevel >= 1)
+            console.log('sendInputPinRequest: msg = ' + msgToServer + ' index = ' + wsIndex);
+        window.xi_webSocketsArray[wsIndex].ws.send(msgToServer);
+    }
+}
+
+
+if( window.xi_beenHereDoneThat === undefined)
+{
+    alert("The first block of Xi script must be either a Set Debug Level or Set IPAddress block.");
+}
+
+
+// Set the pin mode command block handler
+
+    if (window.xi_debugLevel >= 1)
+        console.log('Set Pin Mode - board: ' + boardID + ' Mode: ' + mode + ' Pin: ' + pin);
+    // make sure the websocket for the board was previously established
+    for (var index = 0; index < window.xi_webSocketsArray.length; index++) {
+        if (window.xi_webSocketsArray[index].id === boardID) {
+            // send message to server to create device(input devices) or set the pin mode (output device)
+            var messageToServer; // message to be sent to server
+
+            // the mode is the value prescribed in block descriptor section
+            switch (mode) {
+                // set pin to digital input mode
+                // msg: setDigitalIN - digital service input
+                case 'Digital Input':
+                    if (window.xi_debugLevel >= 1)
+                        console.log('pin mode digital input');
+                    // build the message to send to the Xi Server
+                    // we use the length of the array as the index/device id
+                    messageToServer = 'setDigitalIN/' + boardID + '/' + pin + '/' + window.xi_sensorDataArray.length;
+                    sendSetInputPinRequest(messageToServer, 'd', boardID, pin, index);
+                    break;
+                // set pin to digital out
+                // msg: setDigitalOUT
+                case 'Digital Output':
+
+                    if (window.xi_debugLevel >= 1)
+                        console.log('pin mode digital output');
+                    messageToServer = 'setDigitalOUT/' + boardID + '/' + pin;
+                    if (window.xi_debugLevel >= 2)
+                        console.log('pinMode Digital Out Msg to server: ' + messageToServer);
+                    window.xi_webSocketsArray[index].ws.send(messageToServer);
+                    break;
+                // set pin to analog in
+                // msg: setAnalogIN
+                case 'Analog Sensor Input':
+                    if (window.xi_debugLevel >= 1)
+                        console.log('pin mode analog input');
+                    // build the message to send to the Xi Server
+                    // we use the length of the array as the index/device id
+                    messageToServer = 'setAnalogIN/' + window.xi_sensorDataArray.length + '/' + boardID + '/' + pin;
+                    sendSetInputPinRequest(messageToServer, 'a', boardID, pin, index);
+                    break;
+                // set pin mode PWM
+                // msg: setAnalogOUT
+                case 'Analog (PWM) Output':
+                    if (window.xi_debugLevel >= 1)
+                        console.log('pin mode PWM');
+                    // send out the pwm mode message
+                    // the host tests if the pin is PWM and if not will send back an 'xp' message
+                    messageToServer = 'setAnalogOUT/' + boardID + '/' + pin;
+                    if (window.xi_debugLevel >= 2)
+                        console.log('pinMode PWM Out Msg to server: ' + messageToServer);
+                    window.xi_webSocketsArray[index].ws.send(messageToServer);
+                    break;
+                // set pin mode Servo Standard
+                // msg: setStandardServoMode
+                case 'Standard Servo (PWM)':
+                    if (window.xi_debugLevel >= 1)
+                        console.log('pin mode Standard Servo');
+                    messageToServer = 'setStandardServoMode/' + boardID + '/' + pin;
+                    if (window.xi_debugLevel >= 2)
+                        console.log('pinMode PWM Out Msg to server: ' + messageToServer);
+                    window.xi_webSocketsArray[index].ws.send(messageToServer);
+                    break;
+                // set pin mode Servo Continous
+                // msg: setContinuousServoMode
+                case 'Continuous Servo (PWM)':
+                    if (window.xi_debugLevel >= 1)
+                        console.log('pin mode Continuous Servo');
+                    messageToServer = 'setContinuousServoMode/' + boardID + '/' + pin;
+                    if (window.xi_debugLevel >= 2)
+                        console.log('pinMode PWM Out Msg to server: ' + messageToServer);
+                    window.xi_webSocketsArray[index].ws.send(messageToServer);
+                    break;
+                // set pin mode Infrared distance
+                // msg: setInfraRedDistanceMode
+                case 'Infrared Distance (GP2Y0A21YK) - (Analog In)':
+                    if (window.xi_debugLevel >= 1)
+                        console.log('pin mode Infrared Distance');
+                    messageToServer = 'setInfraRedDistanceMode/' + boardID + '/' + pin + '/' + window.xi_sensorDataArray.length;
+                    if (window.xi_debugLevel >= 2)
+                        console.log('pinMode PWM Out Msg to server: ' + messageToServer);
+                    sendSetInputPinRequest(messageToServer, 'a', boardID, pin, index);
+                    break;
+                // set pin mode Sonar distance - hc-sr04
+                // msg: setSonarMode
+                case 'SONAR Distance - (Digital In)':
+                    alert('If you are using an Arduino, this feature requires a special version of StandardFirmata.' +
+                        '\n\rSee:\n\rhttps://github.com/rwaldron/johnny-five/wiki/Sonar\n\rfor details.');
+                    if (window.xi_debugLevel >= 1)
+                        console.log('pin mode Sonar Distance');
+                    messageToServer = 'setSonarMode/' + boardID + '/' + pin + '/' + window.xi_sensorDataArray.length;
+                    if (window.xi_debugLevel >= 2)
+                        console.log('pinMode PWM Out Msg to server: ' + messageToServer);
+                    sendSetInputPinRequest(messageToServer, 'd', boardID, pin, index);
+                    break;
+                // set pin mode to tone
+                // msg: setToneMode
+                case 'Tone (Piezo) - (Digital Out)':
+                    if (window.xi_debugLevel >= 1)
+                        console.log('pin mode TONE');
+                    // send out the tone mode message
+                    messageToServer = 'setToneMode/' + boardID + '/' + pin;
+                    if (window.xi_debugLevel >= 2)
+                         console.log('pinMode Tone Mode Out Msg to server: ' + messageToServer);
+                    window.xi_webSocketsArray[index].ws.send(messageToServer);                        
+                    break;
+                default:
+                    if (window.xi_debugLevel >= 1)
+                        console.log('ext.pinMode: Unknown mode - ', +mode);
+            }
+            // just return from here after processing the command
+            return;
+        }
+    }
+    // board not yet established
+    alert('Board ' + boardID + ' IP address must be set before a board is used');
+

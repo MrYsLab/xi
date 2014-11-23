@@ -1,0 +1,138 @@
+/*********************************************************************************************
+ *
+ * * * * Xi4Snap * * *
+ *
+ * setBoardIpAddress2
+ *
+ *
+ *
+ *********************************************************************************************
+ * Created by afy on 9/21/14.
+ *
+ * This is the Xi Client for Snap!
+ *
+ * Version v.001
+ *
+ *
+ * @author: Alan Yorinks
+ Copyright (c) 2014 Alan Yorinks All right reserved.
+
+ This program is free software; you can redistribute it and/or
+ modify it under the terms of the GNU General Public
+ License as published by the Free Software Foundation; either
+ version 3.0 of the License, or (at your option) any later version.
+
+ This library is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ Lesser General Public License for more details.
+
+ You should have received a copy of the GNU General Public
+ License along with this library; if not, write to the Free Software
+ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
+ *
+ */
+
+ var socket;
+
+ // find the socket
+ for (var index = 0; index < window.xi_webSocketsArray.length; index++) {
+ if (window.xi_webSocketsArray[index].id === boardID) {
+ // allow user to reset the board to the same value - for stop and start
+ if ((window.xi_webSocketsArray[index].ip === ipAddress) && (window.xi_webSocketsArray[index].port === port)) {
+
+ socket = window.xi_webSocketsArray[index].ws ;
+ console.log("socket found") ;
+ }
+ }
+ }
+
+ /********************** websocket 'onmessage' handler *************************************/
+ //
+ // All messages sent from board's socket are handled here.
+ // Attach an onmessage event handler to this socket.
+ // Process messages received from the server associated with this socket.
+ socket.onmessage = function (message) {
+ if (window.xi_debugLevel === 1)
+ console.log('onmessage received: ' + message.data);
+
+ // All message components are delimited with '/' character.
+ // TODO: Should this be done with JSON?
+
+ // Incoming messages are split into their component pieces and placed into a 'msg' array
+ // msg[0] for each message is the message ID.
+ var msg = message.data.split('/');
+
+ // process each message ID
+ switch (msg[0]) {
+ // dataUpdate - server data update data message
+ case 'dataUpdate':
+ var index = msg[1]; // unique value used as an index into xi_sensorDataArray
+ var data = msg[2]; // data value to be entered into xi_sensorDataArray
+ if (window.xi_debugLevel >= 2)
+ console.log('sensorData: index = ' + index + ' data = ' + data);
+ // update the array with the new value
+ window.xi_sensorDataArray[index].value = data;
+ break;
+
+ /***************************************
+ ************** server detected errors
+ ****************************************/
+
+ // server detected a problem in setting the mode of this pin
+ case 'invalidSetMode':
+ alert("Invalid Mode Is Being Attempted To Be Set For This Pin");
+ break;
+ case 'invalidPinCommand':
+ alert("This Pin Was Not Configured For This Mode");
+ break;
+ default:
+ if (window.xi_debugLevel >= 1)
+ console.log('onmessage unknown message received');
+ }
+ };
+
+ /********************** websocket 'onmessage' handler *************************************/
+ //
+ // All messages sent from board's socket are handled here.
+ // Attach an onmessage event handler to this socket.
+ // Process messages received from the server associated with this socket.
+ socket.onmessage = function (message) {
+ if (window.xi_debugLevel === 1)
+ console.log('onmessage received: ' + message.data);
+
+ // All message components are delimited with '/' character.
+ // TODO: Should this be done with JSON?
+
+ // Incoming messages are split into their component pieces and placed into a 'msg' array
+ // msg[0] for each message is the message ID.
+ var msg = message.data.split('/');
+
+ // process each message ID
+ switch (msg[0]) {
+ // dataUpdate - server data update data message
+ case 'dataUpdate':
+ var index = msg[1]; // unique value used as an index into xi_sensorDataArray
+ var data = msg[2]; // data value to be entered into xi_sensorDataArray
+ if (window.xi_debugLevel >= 2)
+ console.log('sensorData: index = ' + index + ' data = ' + data);
+ // update the array with the new value
+ window.xi_sensorDataArray[index].value = data;
+ break;
+
+ /***************************************
+ ************** server detected errors
+ ****************************************/
+
+ // server detected a problem in setting the mode of this pin
+ case 'invalidSetMode':
+ alert("Invalid Mode Is Being Attempted To Be Set For This Pin");
+ break;
+ case 'invalidPinCommand':
+  alert("This Pin Was Not Configured For This Mode");
+ break;
+ default:
+ if (window.xi_debugLevel >= 1)
+ console.log('onmessage unknown message received');
+ }
+ };
