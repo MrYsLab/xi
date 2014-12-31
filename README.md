@@ -35,30 +35,18 @@ None
 NOTE: BeagleBone-IO package needs to be updated to the latest release for Servo support. To update the node modules
 to the latest versions, issue the following command while in the xibone directory:
 
-For Linux/Mac:
-
 sudo npm update beaglebone-io
-
-For Windows:
-
-npm update beaglebone-io
 
 
 ### Raspberry Pi/Device Wiring Information:
 1.    [Servo Motor (Standard and Continuous)](https://raw.github.com/MrYsLab/Xi/master/documentation/drawings/RPiServoWiring.png)
 
 NOTE: Raspberry-IO package needs to be updated to the latest release for Servo support. To update the node modules
-to the latest versions, issue the following command while in the xibone directory:
-
-For Linux/Mac:
+to the latest versions, issue the following command while in the xipi directory:
 
 sudo npm rm raspi-io
 sudo npm install raspi-io
 
-For Windows:
-
-npm rm raspi-io
-npm install raspi-io
 
 ### Current Board/Device Support Table
 ![ScreenShot](https://raw.github.com/MrYsLab/Xi/master/documentation/drawings/StatusTable_31Dec14.png)
