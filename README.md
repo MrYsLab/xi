@@ -1,6 +1,6 @@
 Xi
 ======
-The Cross-Platform Interconnect
+## The Cross-Platform Interconnect
 
 ![ScreenShot](https://raw.github.com/MrYsLab/Xi/master/documentation/drawings/XiLogo.png)
 
