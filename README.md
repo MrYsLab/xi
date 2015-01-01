@@ -47,6 +47,11 @@ to the latest versions, issue the following command while in the xipi directory:
 sudo npm rm raspi-io
 sudo npm install raspi-io
 
+The pin numbering scheme for the Raspberry Pi follows the wiringPI pin numbering scheme. So for PWM or Servo, the Pin number to
+use in the Scratch Block would be 1, even though the physical pin number is 12.
+
+Please refer to the [Raspi-IO Pin Map](https://github.com/bryan-m-hughes/raspi-io/wiki).
+
 
 ### Current Board/Device Support Table
 ![ScreenShot](https://raw.github.com/MrYsLab/Xi/master/documentation/drawings/StatusTable_31Dec14.png)
