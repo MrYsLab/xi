@@ -744,6 +744,6 @@ new (function () {
 
 
     // Register the extension
-    ScratchExtensions.register('Xi4S_v_003_19Nov14', descriptor, ext);
+    ScratchExtensions.register('Xi4S_v_004_12Feb15', descriptor, ext);
 
 })();
