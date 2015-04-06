@@ -17,6 +17,36 @@ Translators Guide can be found in the Documentation Directory.
 None
 
 ### Known Limitations Imposed By The Scratch Team:
+
+####!!!!!! Scratch 2.0 Has Gone From HTTP to HTTPS, Preventing WebSocket Connections From Succeeding !!!!!!!!
+Until we can provide a wss (secure WebSocket) solution, here is a workaround for Firefox and Chrome Browsers.
+
+For Firefox, enter this "url" into the browser:
+```
+about:config
+```
+
+When the warning screen appears, click on the "I'll be careful I promise" button.
+
+Next, search for
+```
+ network.websocket.allowinsecureFromHTTPS
+```
+and click on the line to set it to true. Then close and reopen Firefox.
+
+
+
+For Chrome, enter this "url" into the browser:
+```
+chrome://flags
+```
+and then search for 
+```
+Allow insecure WebSocket from https origin.
+```
+Then click on "enable". Close and reopen Chrome.
+
+
 1. Currently Xi only works with the Scratch 2.0 Online editor.
 2. Projects created using Xi cannot be shared on the Scratch cloud.
 
