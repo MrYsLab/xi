@@ -21,6 +21,9 @@ None
 Currently Xi works only on Chrome. After launching the Xi server for your board, go to:
 [http://scratchx.org/?url=http://MrYsLab.github.io/xi4s.js](http://scratchx.org/?url=http://MrYsLab.github.io/xi4s.js)
 
+or for the French translation:
+[http://scratchx.org/?url=http://MrYsLab.github.io/xi4s_fr4.js](http://scratchx.org/?url=http://MrYsLab.github.io/xi4s_fr4.js)
+
 Xiduino loads this page automatically after the server is started.
 
 This is the new Scratch Extension Web Site. After it launches, wait a moment and a dialog box will appear to allow
