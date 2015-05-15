@@ -18,37 +18,16 @@ None
 
 ### Known Limitations Imposed By The Scratch Team:
 
-####!!!!!! Scratch 2.0 Has Gone From HTTP to HTTPS, Preventing WebSocket Connections From Succeeding !!!!!!!!
-Until we can provide a wss (secure WebSocket) solution, here is a workaround for Firefox and Chrome Browsers.
+Currently Xi works only on Chrome. After launching the Xi server for your board, go to:
+[http://scratchx.org/?url=http://MrYsLab.github.io/xi4s.js](http://scratchx.org/?url=http://MrYsLab.github.io/xi4s.js)
 
-For Firefox, enter this "url" into the browser:
-```
-about:config
-```
+Xiduino loads this page automatically after the server is started.
 
-When the warning screen appears, click on the "I'll be careful I promise" button.
+This is the new Scratch Extension Web Site. After it launches, wait a moment and a dialog box will appear to allow
+you to continue with loading the extension.
 
-Next, search for
-```
- network.websocket.allowinsecureFromHTTPS
-```
-and click on the line to set it to true. Then close and reopen Firefox.
+Accept the warning and the Xi blocks will load.
 
-
-
-For Chrome, enter this "url" into the browser:
-```
-chrome://flags
-```
-and then search for 
-```
-Allow insecure WebSocket from https origin.
-```
-Then click on "enable". Close and reopen Chrome.
-
-
-1. Currently Xi only works with the Scratch 2.0 Online editor.
-2. Projects created using Xi cannot be shared on the Scratch cloud.
 
 
 ### Arduino/Device Wiring Information:

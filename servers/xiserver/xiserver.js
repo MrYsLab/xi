@@ -70,7 +70,7 @@ var board; // a johnny-five 'board'
 var xiServerVersion = "XiServer version .004 22 Nov 2014";
 
 var serverType = 'ard'; // set by user in command line invocation
-var urlAddr = 'http://scratch.mit.edu';
+var urlAddr = 'http://scratchx.org/?url=http://MrYsLab.github.io/xi4s.js';
 var debugLevel = 0; // set by user in command line invocation
 var comPort; // communications port for Arduino - allows user to select the com port
 var ipPort = 1234; // ip port number
@@ -209,6 +209,7 @@ board.on('ready', function () {
             // The message ID is always the first element
             // TODO: explore using JSON instead of current delimitation scheme
             var msg = message.utf8Data.split('/');
+
 
             // Process each message type received
             switch (msg[0]) {
@@ -397,9 +398,9 @@ board.on('ready', function () {
                     if (debugLevel >= 3) {
                         console.log('digitalWrite: board ' + msg[1] + 'pin' + msg[2] + ' value ' + msg[3]);
                     }
-                    // validate that this pin was initially set to correct mode
+                     //validate that this pin was initially set to correct mode
                     if (board.io.pins[msg[2]].mode !== five.Pin.OUTPUT) {
-                        connection.send('invalidPinCommand/' + 2 + '/' + msg[1] + '/' + msg[2]);
+                         connection.send('invalidPinCommand/' + 2 + '/' + msg[1] + '/' + msg[2]);
                     }
                     else {
                         if (msg[3] === 'Off') {
