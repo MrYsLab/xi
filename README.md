@@ -18,13 +18,16 @@ None
 
 ### Known Limitations Imposed By The Scratch Team:
 
-Currently Xi works only on Chrome. After launching the Xi server for your board, go to:
+Currently Xi works only on Chrome for Ubuntu (and perhaps other linux flavors). After launching the Xi server for your board, go to:
 [http://scratchx.org/?url=http://MrYsLab.github.io/xi4s.js](http://scratchx.org/?url=http://MrYsLab.github.io/xi4s.js)
 
 This is the new Scratch Extension Web Site. After it launches, wait a moment and a dialog box will appear to allow
 you to continue with loading the extension.
 
 Accept the warning and the Xi blocks will load.
+
+You may see another warning stating there is an extension problem and that a plug-in needs to be loaded. Just click OK to dismiss 
+this dialog box. Xi does not use the Scratch plugins, but uses the Xi servers.
 
 For a French translation use this URL:
 [http://scratchx.org/?url=http://MrYsLab.github.io/xi4s_fr4.js](http://scratchx.org/?url=http://MrYsLab.github.io/xi4s_fr4.js)
