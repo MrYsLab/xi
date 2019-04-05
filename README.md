@@ -1,3 +1,5 @@
+# This repo is now archived. The xi concept has been incorporated into the [Banyan project](https://mryslab.github.io/python_banyan/) with [JavaScript support](https://github.com/MrYsLab/js-banyan).
+
 Xi
 ======
 ## The Cross-Platform Interconnect
